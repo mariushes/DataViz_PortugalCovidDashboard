@@ -14,6 +14,8 @@ import pandas as pd
 import plotly.graph_objs as go
 import numpy as np
 
+import statistics
+
 def unixToDatetime(unix):
     ''' Convert unix timestamp to datetime. '''
     return pd.to_datetime(unix,unit='s')
@@ -36,10 +38,35 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 #Data load
-df_concelhos = pd.read_csv("Data/new_infections_concelhos.csv")
-dates = df_concelhos.iloc[:,0].tolist()
+df_new_concelhos = pd.read_csv("Data/new_infections_concelhos.csv")
+dates = df_new_concelhos.iloc[:,0].tolist()
 dates_timestamp = [datetime.strptime(date,'%Y-%m-%d').timestamp() for date in dates]
-df_concelhos = df_concelhos.set_index("data")
+df_new_concelhos = df_new_concelhos.set_index("data")
+
+df_new_per100k_concelhos = pd.read_csv("Data/new_infections_per100k_concelhos.csv")
+df_new_per100k_concelhos = df_new_per100k_concelhos.set_index("data")
+
+df_cumulative_per100k_concelhos = pd.read_csv("Data/cumulative_per100k_concelhos.csv")
+df_cumulative_per100k_concelhos = df_cumulative_per100k_concelhos.set_index("data")
+
+df_cumulative_concelhos = pd.read_csv("Data/cumulative_concelhos.csv")
+df_cumulative_concelhos = df_cumulative_concelhos.set_index("data")
+
+
+radios_div = html.Div([
+            dcc.RadioItems(
+                id='cumulative-radio',
+                options=[{'label': i, 'value': i} for i in ['New Infections', 'Cumulative']],
+                value='New Infections',
+                labelStyle={'display': 'inline-block'}
+            ),
+            dcc.RadioItems(
+                id='absolute-radio',
+                options=[{'label': i, 'value': i} for i in ['Per 100k Inhabitants', 'Absolute']],
+                value='Per 100k Inhabitants',
+                labelStyle={'display': 'inline-block'}
+            )
+        ])
 
 date_picker = dcc.DatePickerSingle(
         id='date-picker-single',
@@ -51,6 +78,7 @@ date_picker = dcc.DatePickerSingle(
 
 #container layout and elements
 app.layout = html.Div([
+    radios_div,
     dcc.Graph(id='graph-with-slider'),
     date_picker,
     dcc.Slider(
@@ -68,20 +96,41 @@ app.layout = html.Div([
     Output('date-picker-single', 'date'),
     Input('year_slider', 'value'))
 def slider_callback(selected_date):
-    print(selected_date)
     selected_date_str = str(unixToDatetime(selected_date).date())
-    print(selected_date_str)
     return date.fromisoformat(selected_date_str)
 
 
 #callback after date picker interaction
 @app.callback(
     Output('graph-with-slider', 'figure'),
-    Input('date-picker-single', 'date'))
-def create_choropleth_callback(selected_date):
-    return create_choropleth(selected_date)
+    Input('date-picker-single', 'date'),
+    Input('absolute-radio', 'value'),
+    Input('cumulative-radio', 'value')
+)
+def create_choropleth_callback(selected_date, absolute, cumulative):
+    return create_choropleth(selected_date, absolute, cumulative)
 
-def create_choropleth(selected_date):
+def create_choropleth(selected_date, absolute, cumulative):
+    if absolute == "Absolute" and cumulative == 'New Infections':
+        df = df_new_concelhos
+        quantiles = []
+        for column in df.columns:
+            quantiles.append(df[column].quantile(0.95))
+        max = np.max(quantiles)
+    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Infections':
+        df = df_new_per100k_concelhos
+        # compute max value for map choropleth
+        quantiles = []
+        for column in df.columns:
+            quantiles.append(df[column].quantile(0.95))
+        max = statistics.mean(quantiles)
+    elif absolute == "Per 100k Inhabitants" and cumulative == 'Cumulative':
+        df = df_cumulative_per100k_concelhos
+        max = df.to_numpy().max()
+    elif absolute == "Absolute" and cumulative == 'Cumulative':
+        df = df_cumulative_concelhos
+        max = df.to_numpy().max()
+
     with open('geojson/continente.geojson', encoding='utf-8') as file:
         continente = json.loads(file.read())
 
@@ -125,7 +174,7 @@ def create_choropleth(selected_date):
     # update all the continente data with the values from df_concelhos
     for i in continente_data.index.tolist():
         concelho = continente_data.iloc[i,1]
-        continente_data.iloc[i,2] = df_concelhos.loc[selected_date,concelho.lower()]
+        continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
 
 
 
@@ -155,7 +204,7 @@ def create_choropleth(selected_date):
         z=continente_data.value,
         colorscale="teal",
         zmin=0,
-        zmax=100,
+        zmax=max,
         hovertext=continente_data.concelho,
         hoverinfo="text",
         colorbar=dict(
