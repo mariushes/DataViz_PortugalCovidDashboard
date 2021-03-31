@@ -17,6 +17,7 @@ import numpy as np
 import statistics
 from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
+from enum import Enum
 
 ##### Auxiliary functions
 def unixToDatetime(unix):
@@ -86,7 +87,11 @@ radios_div = \
     ])
 
 #Choropleth
-def create_choropleth(selected_date, absolute, cumulative):
+class Region(Enum):
+    CONTINENT = 1
+    MADEIRA = 2
+    AZORES = 3
+def create_choropleth(selected_date, absolute, cumulative, output_region):
     if absolute == "Absolute" and cumulative == 'New Infections':
         df = df_new_concelhos
         quantiles = []
@@ -146,26 +151,37 @@ def create_choropleth(selected_date, absolute, cumulative):
                 selected_date = x
                 break
 
+    if output_region == Region.CONTINENT:
+        # update all the continente data with the values from df_concelhos
+        for i in continente_data.index.tolist():
+            concelho = continente_data.iloc[i,1]
+            try:
+                continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+            except Exception as e:
+                print("Exception: ", e)
 
-    # update all the continente data with the values from df_concelhos
-    for i in continente_data.index.tolist():
-        concelho = continente_data.iloc[i,1]
-        continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+        return createFigure(continente, continente_data, max)
+    
+    elif output_region == Region.MADEIRA:
+        # update all the madeira data with the values from df_concelhos
+        for i in madeira_data.index.tolist():
+            concelho = madeira_data.iloc[i,1]
+            try:
+                madeira_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+            except Exception as e:
+                print("Exception: ", e)
+        return createFigure(madeira, madeira_data, max)
 
-    # update all the madeira data with the values from df_concelhos
-    for i in madeira_data.index.tolist():
-        concelho = madeira_data.iloc[i,1]
-        madeira_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+    else:
+        # update all the azores data with the values from df_concelhos
+        for i in azores_data.index.tolist():
+            concelho = azores_data.iloc[i,1]
+            try:
+                azores_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+            except Exception as e:
+                print("Exception: ", e)
+        return createFigure(azores, azores_data, max)
 
-    # update all the azores data with the values from df_concelhos
-    for i in azores_data.index.tolist():
-        concelho = azores_data.iloc[i,1]
-        try:
-            azores_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
-        except Exception as e:
-            print("Exception: ", e)
-
-    return createFigure(continente, continente_data, max)
 
 palette = {
     'cutoff': 'rgba(227, 78, 38, 1)',
@@ -292,7 +308,17 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 #container layout and elements
 app.layout = html.Div([
     radios_div,
-    dcc.Graph(id='graph-with-slider'),
+
+    html.Div([
+        dcc.Graph(id='graph-with-slider', style={"height":"70%", "min-height":"650px"}),
+
+        html.Div([
+            dcc.Graph(id='graph-with-slider_madeira',  style={"height": "50%", "min-height":"310px"}),
+            dcc.Graph(id='graph-with-slider_azores',  style={"height": "50%", "min-height":"310px"})
+        ], style={"display": "grid"}),
+
+    ], style={"display": "grid", "grid-template-columns": "50% 50%"}),
+
     date_picker,
     slider_div
 ],
@@ -318,7 +344,7 @@ def slider_callback(selected_date):
     selected_date_str = str(unixToDatetime(selected_date).date())
     return datetime.date.fromisoformat(selected_date_str)
 
-#Choropleth
+#Choropleth (continent)
 @app.callback(
     Output('graph-with-slider', 'figure'),
     Input('date-picker-single', 'date'),
@@ -326,7 +352,29 @@ def slider_callback(selected_date):
     Input('cumulative-radio', 'value')
 )
 def create_choropleth_callback(selected_date, absolute, cumulative):
-    return create_choropleth(selected_date, absolute, cumulative)
+    return create_choropleth(selected_date, absolute, cumulative, Region.CONTINENT)
+
+
+#Choropleth (madeira)
+@app.callback(
+    Output('graph-with-slider_madeira', 'figure'),
+    Input('date-picker-single', 'date'),
+    Input('absolute-radio', 'value'),
+    Input('cumulative-radio', 'value')
+)
+def create_choropleth_madeira_callback(selected_date, absolute, cumulative):
+    return create_choropleth(selected_date, absolute, cumulative, Region.MADEIRA)
+
+
+#Choropleth (azores)
+@app.callback(
+    Output('graph-with-slider_azores', 'figure'),
+    Input('date-picker-single', 'date'),
+    Input('absolute-radio', 'value'),
+    Input('cumulative-radio', 'value')
+)
+def create_choropleth_azores_callback(selected_date, absolute, cumulative):
+    return create_choropleth(selected_date, absolute, cumulative, Region.AZORES)
 
 
 
