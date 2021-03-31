@@ -282,22 +282,9 @@ app.layout = html.Div([
 
 
 
-
-
-
-
 ##### Callbacks
-#Choropleth
-@app.callback(
-    Output('graph-with-slider', 'figure'),
-    Input('date-picker-single', 'date'),
-    Input('absolute-radio', 'value'),
-    Input('cumulative-radio', 'value')
-)
-def create_choropleth_callback(selected_date, absolute, cumulative):
-    return create_choropleth(selected_date, absolute, cumulative)
 
-#Slider-Timeline
+#Date-picker
 @app.callback(
     Output('slider-timeline', 'figure'),
     Input('date-picker-single', 'date')
@@ -312,6 +299,16 @@ def create_slider_timeline_callback(slider_date):
 def slider_callback(selected_date):
     selected_date_str = str(unixToDatetime(selected_date).date())
     return datetime.date.fromisoformat(selected_date_str)
+
+#Choropleth
+@app.callback(
+    Output('graph-with-slider', 'figure'),
+    Input('date-picker-single', 'date'),
+    Input('absolute-radio', 'value'),
+    Input('cumulative-radio', 'value')
+)
+def create_choropleth_callback(selected_date, absolute, cumulative):
+    return create_choropleth(selected_date, absolute, cumulative)
 
 
 
