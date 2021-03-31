@@ -3,22 +3,21 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-
-##### Imports
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import datetime
 import time
+from dash.dependencies import Input, Output
 import json
 import pandas as pd
 import plotly.graph_objs as go
 import numpy as np
+
 import statistics
-from dash.dependencies import Input, Output
+
 from helper_functions import color_interval, date_range
 
-##### Auxiliary functions
 def unixToDatetime(unix):
     ''' Convert unix timestamp to datetime. '''
     return pd.to_datetime(unix,unit='s')
@@ -36,56 +35,99 @@ def getMarks(start, end, Nth=1):
 
     return result
 
+#style
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-##### Data Load
-
-#df_new_concelhos
+#Data load
 df_new_concelhos = pd.read_csv("Data/new_infections_concelhos.csv")
 dates = df_new_concelhos.iloc[:,0].tolist()
 dates_timestamp = [datetime.datetime.strptime(date,'%Y-%m-%d').timestamp() for date in dates]
 df_new_concelhos = df_new_concelhos.set_index("data")
 
-#df_new_per100k_concelhos
 df_new_per100k_concelhos = pd.read_csv("Data/new_infections_per100k_concelhos.csv")
 df_new_per100k_concelhos = df_new_per100k_concelhos.set_index("data")
 
-#df_cumulative_per100k_concelhos
 df_cumulative_per100k_concelhos = pd.read_csv("Data/cumulative_per100k_concelhos.csv")
 df_cumulative_per100k_concelhos = df_cumulative_per100k_concelhos.set_index("data")
 
-#df_cumulative_concelhos
 df_cumulative_concelhos = pd.read_csv("Data/cumulative_concelhos.csv")
 df_cumulative_concelhos = df_cumulative_concelhos.set_index("data")
 
-#portugal_new_infections_7average_data
+
 portugal_new_infections_7average_data= pd.read_csv("./Data/time_series_covid19_confirmed_new_infections_7average_portugal.csv")
 portugal_new_infections_7average_data = portugal_new_infections_7average_data.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
 portugal_new_infections_7average_data = portugal_new_infections_7average_data[date_range(dates[0],dates[-1])]
 
+radios_div = html.Div([
+            dcc.RadioItems(
+                id='cumulative-radio',
+                options=[{'label': i, 'value': i} for i in ['New Infections', 'Cumulative']],
+                value='New Infections',
+                labelStyle={'display': 'inline-block'}
+            ),
+            dcc.RadioItems(
+                id='absolute-radio',
+                options=[{'label': i, 'value': i} for i in ['Per 100k Inhabitants', 'Absolute']],
+                value='Per 100k Inhabitants',
+                labelStyle={'display': 'inline-block'}
+            )
+        ])
+
+date_picker = dcc.DatePickerSingle(
+        id='date-picker-single',
+        min_date_allowed=datetime.date.fromisoformat(dates[0]),
+        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
+        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
+        date=datetime.date.fromisoformat(dates[-1])
+    ) 
+slider_div = html.Div([
+dcc.Graph(id='slider-timeline', style={'width':'500px', 'float':'left','marginLeft': 20, 'marginRight': 20}),
+dcc.Slider(
+        id='year_slider',
+        min = min(dates_timestamp),
+        max = max(dates_timestamp),
+        value = min(dates_timestamp),
+        marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp))),
+        style={'width':'500px', 'float':'left','marginLeft': 20, 'marginRight': 20}
+    )
 
 
+])
+#container layout and elements
+app.layout = html.Div([
+    radios_div,
+    dcc.Graph(id='graph-with-slider'),
+    date_picker,
+    slider_div
+])
+
+#Date Slider callback
+@app.callback(
+    Output('date-picker-single', 'date'),
+    Input('year_slider', 'value'))
+def slider_callback(selected_date):
+    selected_date_str = str(unixToDatetime(selected_date).date())
+    return datetime.date.fromisoformat(selected_date_str)
 
 
+#callback after date picker interaction
+@app.callback(
+    Output('graph-with-slider', 'figure'),
+    Input('date-picker-single', 'date'),
+    Input('absolute-radio', 'value'),
+    Input('cumulative-radio', 'value')
+)
+def create_choropleth_callback(selected_date, absolute, cumulative):
+    return create_choropleth(selected_date, absolute, cumulative)
 
-##### Components
-#Radio Buttons
-radios_div = \
-    html.Div([
-        dcc.RadioItems(
-            id='cumulative-radio',
-            options=[{'label': i, 'value': i} for i in ['New Infections', 'Cumulative']],
-            value='New Infections',
-            labelStyle={'display': 'inline-block'}
-        ),
-        dcc.RadioItems(
-            id='absolute-radio',
-            options=[{'label': i, 'value': i} for i in ['Per 100k Inhabitants', 'Absolute']],
-            value='Per 100k Inhabitants',
-            labelStyle={'display': 'inline-block'}
-        )
-    ])
+@app.callback(
+    Output('slider-timeline', 'figure'),
+    Input('date-picker-single', 'date')
+)
+def create_slider_timeline_callback(slider_date):
+    return create_slider_timeline(slider_date)
 
-#Choropleth
 def create_choropleth(selected_date, absolute, cumulative):
     if absolute == "Absolute" and cumulative == 'New Infections':
         df = df_new_concelhos
@@ -202,18 +244,6 @@ def create_choropleth(selected_date, absolute, cumulative):
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=700)
     return fig
 
-#Slider-Timeline
-slider_div = html.Div([
-dcc.Graph(id='slider-timeline', style={'width':'500px', 'float':'left','marginLeft': 20, 'marginRight': 20}),
-dcc.Slider(
-        id='year_slider',
-        min = min(dates_timestamp),
-        max = max(dates_timestamp),
-        value = min(dates_timestamp),
-        marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
-    )
-])
-
 def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
     portugal_new_infections_7average_data_color["color"] = ["green"]
@@ -255,66 +285,5 @@ def create_slider_timeline(slider_date):
     figure.add_vline(x=slider_date)
     return figure
 
-#Date Picker
-date_picker = dcc.DatePickerSingle(
-        id='date-picker-single',
-        min_date_allowed=datetime.date.fromisoformat(dates[0]),
-        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
-        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
-        date=datetime.date.fromisoformat(dates[-1])
-    ) 
-
-
-
-
-
-##### Dash
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-#container layout and elements
-app.layout = html.Div([
-    radios_div,
-    dcc.Graph(id='graph-with-slider'),
-    date_picker,
-    slider_div
-])
-
-
-
-
-
-
-
-##### Callbacks
-#Choropleth
-@app.callback(
-    Output('graph-with-slider', 'figure'),
-    Input('date-picker-single', 'date'),
-    Input('absolute-radio', 'value'),
-    Input('cumulative-radio', 'value')
-)
-def create_choropleth_callback(selected_date, absolute, cumulative):
-    return create_choropleth(selected_date, absolute, cumulative)
-
-#Slider-Timeline
-@app.callback(
-    Output('slider-timeline', 'figure'),
-    Input('date-picker-single', 'date')
-)
-def create_slider_timeline_callback(slider_date):
-    return create_slider_timeline(slider_date)
-
-#Date Slider
-@app.callback(
-    Output('date-picker-single', 'date'),
-    Input('year_slider', 'value'))
-def slider_callback(selected_date):
-    selected_date_str = str(unixToDatetime(selected_date).date())
-    return datetime.date.fromisoformat(selected_date_str)
-
-
-
-##### MAIN
 if __name__ == '__main__':
     app.run_server(debug=True)
