@@ -152,36 +152,49 @@ def create_choropleth(selected_date, absolute, cumulative):
         concelho = continente_data.iloc[i,1]
         continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
 
+    # update all the madeira data with the values from df_concelhos
+    for i in madeira_data.index.tolist():
+        concelho = madeira_data.iloc[i,1]
+        madeira_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
 
+    # update all the azores data with the values from df_concelhos
+    for i in azores_data.index.tolist():
+        concelho = azores_data.iloc[i,1]
+        try:
+            azores_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+        except Exception as e:
+            print("Exception: ", e)
 
+    return createFigure(continente, continente_data, max)
 
-    palette = {'cutoff': 'rgba(227, 78, 38, 1)',
-               'wave1': 'rgba(247, 141, 31, 0.7)',
-               'wave2': 'rgba(227, 78, 38, 1)',
-               'scale0': 'rgba(172, 185, 54, 0)',
-               'scale1': 'rgba(0, 120, 128, 1)',
-               'scale2': 'rgba(0, 102, 102, 1)',
-               'scale3': 'rgba(0, 70, 70, 1)',
-               'borders': 'rgba(0, 0, 0, 1)',
-               'text': 'rgba(114, 114, 114, 1)',
-               'legendtext': 'black',
-               'bartext': 'black',
-               'bartitletext': 'black',
-               'bubbletext': 'black'
-               }
-
+palette = {
+    'cutoff': 'rgba(227, 78, 38, 1)',
+    'wave1': 'rgba(247, 141, 31, 0.7)',
+    'wave2': 'rgba(227, 78, 38, 1)',
+    'scale0': 'rgba(172, 185, 54, 0)',
+    'scale1': 'rgba(0, 120, 128, 1)',
+    'scale2': 'rgba(0, 102, 102, 1)',
+    'scale3': 'rgba(0, 70, 70, 1)',
+    'borders': 'rgba(0, 0, 0, 1)',
+    'text': 'rgba(114, 114, 114, 1)',
+    'legendtext': 'black',
+    'bartext': 'black',
+    'bartitletext': 'black',
+    'bubbletext': 'black'
+}
+def createFigure(region, region_data, max_value):
     # %%
     fig = go.Figure()
 
     ## Choropleth map ######
     fig.add_choropleth(
-        geojson=continente, 
-        locations=continente_data.id,
-        z=continente_data.value,
+        geojson=region, 
+        locations=region_data.id,
+        z=region_data.value,
         colorscale="teal",
         zmin=0,
-        zmax=max,
-        hovertext=continente_data.concelho,
+        zmax=max_value,
+        hovertext=region_data.concelho,
         hoverinfo="text",
         colorbar=dict(
             title={
@@ -202,16 +215,20 @@ def create_choropleth(selected_date, absolute, cumulative):
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=700)
     return fig
 
+
+
 #Slider-Timeline
 slider_div = html.Div([
-dcc.Graph(id='slider-timeline', style={'width':'500px', 'float':'left','marginLeft': 20, 'marginRight': 20}),
-dcc.Slider(
-        id='year_slider',
-        min = min(dates_timestamp),
-        max = max(dates_timestamp),
-        value = min(dates_timestamp),
-        marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
-    )
+dcc.Graph(id='slider-timeline'),
+html.Div(
+    [dcc.Slider(
+            id='year_slider',
+            min = min(dates_timestamp),
+            max = max(dates_timestamp),
+            value = min(dates_timestamp),
+            marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
+        )
+    ])
 ])
 
 def create_slider_timeline(slider_date):
@@ -278,7 +295,8 @@ app.layout = html.Div([
     dcc.Graph(id='graph-with-slider'),
     date_picker,
     slider_div
-])
+],
+style={"display": "grid"})
 
 
 
