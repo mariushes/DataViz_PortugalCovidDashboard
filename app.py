@@ -6,7 +6,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from datetime import date, datetime
+import datetime
 import time
 from dash.dependencies import Input, Output
 import json
@@ -15,6 +15,8 @@ import plotly.graph_objs as go
 import numpy as np
 
 import statistics
+
+from helper_functions import color_interval, date_range
 
 def unixToDatetime(unix):
     ''' Convert unix timestamp to datetime. '''
@@ -40,7 +42,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 #Data load
 df_new_concelhos = pd.read_csv("Data/new_infections_concelhos.csv")
 dates = df_new_concelhos.iloc[:,0].tolist()
-dates_timestamp = [datetime.strptime(date,'%Y-%m-%d').timestamp() for date in dates]
+dates_timestamp = [datetime.datetime.strptime(date,'%Y-%m-%d').timestamp() for date in dates]
 df_new_concelhos = df_new_concelhos.set_index("data")
 
 df_new_per100k_concelhos = pd.read_csv("Data/new_infections_per100k_concelhos.csv")
@@ -52,6 +54,10 @@ df_cumulative_per100k_concelhos = df_cumulative_per100k_concelhos.set_index("dat
 df_cumulative_concelhos = pd.read_csv("Data/cumulative_concelhos.csv")
 df_cumulative_concelhos = df_cumulative_concelhos.set_index("data")
 
+
+portugal_new_infections_7average_data= pd.read_csv("./Data/time_series_covid19_confirmed_new_infections_7average_portugal.csv")
+portugal_new_infections_7average_data = portugal_new_infections_7average_data.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
+portugal_new_infections_7average_data = portugal_new_infections_7average_data[date_range(dates[0],dates[-1])]
 
 radios_div = html.Div([
             dcc.RadioItems(
@@ -70,24 +76,29 @@ radios_div = html.Div([
 
 date_picker = dcc.DatePickerSingle(
         id='date-picker-single',
-        min_date_allowed=date.fromisoformat(dates[0]),
-        max_date_allowed=date.fromisoformat(dates[-1]),
-        initial_visible_month=date.fromisoformat(dates[-1]),
-        date=date.fromisoformat(dates[-1])
+        min_date_allowed=datetime.date.fromisoformat(dates[0]),
+        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
+        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
+        date=datetime.date.fromisoformat(dates[-1])
     ) 
-
-#container layout and elements
-app.layout = html.Div([
-    radios_div,
-    dcc.Graph(id='graph-with-slider'),
-    date_picker,
-    dcc.Slider(
+slider_div = html.Div([
+dcc.Graph(id='slider-timeline'),
+dcc.Slider(
         id='year_slider',
         min = min(dates_timestamp),
         max = max(dates_timestamp),
         value = min(dates_timestamp),
         marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp))),
-    ),
+    )
+
+
+])
+#container layout and elements
+app.layout = html.Div([
+    radios_div,
+    dcc.Graph(id='graph-with-slider'),
+    date_picker,
+    slider_div,
     html.P(id='placeholder')
 ])
 
@@ -97,7 +108,7 @@ app.layout = html.Div([
     Input('year_slider', 'value'))
 def slider_callback(selected_date):
     selected_date_str = str(unixToDatetime(selected_date).date())
-    return date.fromisoformat(selected_date_str)
+    return datetime.date.fromisoformat(selected_date_str)
 
 
 #callback after date picker interaction
@@ -109,6 +120,13 @@ def slider_callback(selected_date):
 )
 def create_choropleth_callback(selected_date, absolute, cumulative):
     return create_choropleth(selected_date, absolute, cumulative)
+
+@app.callback(
+    Output('slider-timeline', 'figure'),
+    Input('date-picker-single', 'date')
+)
+def create_slider_timeline_callback(slider_date):
+    return create_slider_timeline(slider_date)
 
 def create_choropleth(selected_date, absolute, cumulative):
     if absolute == "Absolute" and cumulative == 'New Infections':
@@ -166,7 +184,7 @@ def create_choropleth(selected_date, absolute, cumulative):
     # if the selected date is not in the available dates choose the next higher date.
     if selected_date not in dates:
         for x in dates:
-            if date.fromisoformat(selected_date) <= date.fromisoformat(x):
+            if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
                 selected_date = x
                 break
 
@@ -226,6 +244,46 @@ def create_choropleth(selected_date, absolute, cumulative):
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=700)
     return fig
 
+def create_slider_timeline(slider_date):
+    portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
+    portugal_new_infections_7average_data_color["color"] = ["green"]
+    color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
+
+    data = []
+    for i in range(len(portugal_new_infections_7average_data_color.values.tolist())):
+        row = portugal_new_infections_7average_data_color.values.tolist()[i]
+        name = ""
+        color = row.pop(len(row) - 1)
+        data.append(dict(type='scatter',
+                         y=row,
+                         x=portugal_new_infections_7average_data.columns,
+                         name=name,
+                         fill='tozeroy',
+                         line=dict(color=color)
+                         ))
+
+    layout = dict(title=dict(text=''),
+                  xaxis={
+                      'showgrid': False,  # thin lines in the background
+                      'zeroline': False,  # thick line at x=0
+                      'visible': False,  # numbers below
+                  },
+                  yaxis= {
+                        'showgrid': False, # thin lines in the background
+                        'zeroline': False, # thick line at x=0
+                        'visible': False,  # numbers below
+                        },
+                  width=1400,
+                  height=200,
+                  showlegend=False,
+                  margin=dict(l=30, r=0, t=20, b=0),
+                  paper_bgcolor='rgba(0,0,0,0)',
+                  plot_bgcolor='rgba(0,0,0,0)'
+                  )
+    figure = go.Figure(data=data,
+                       layout=layout)
+    figure.add_vline(x=slider_date)
+    return figure
 
 if __name__ == '__main__':
     app.run_server(debug=True)
