@@ -86,6 +86,17 @@ radios_div = \
         )
     ])
 
+#total-cases-counter
+def getTotalCases(selected_date):
+    # if the selected date is not in the available dates choose the next higher date.
+    if selected_date not in dates:
+        for x in dates:
+            if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
+                selected_date = x
+                break
+            
+    return np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
+
 #Choropleth
 class Region(Enum):
     CONTINENT = 1
@@ -307,7 +318,13 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 #container layout and elements
 app.layout = html.Div([
-    radios_div,
+
+    html.Div([
+        radios_div,
+        html.H4('Progression of coronavirus in Portugal'),
+        html.H4('0', id='total-cases-counter')
+
+    ], style={"display": "grid", "grid-template-columns": "30% 30% 30%"}),
 
     html.Div([
         dcc.Graph(id='graph-with-slider', style={"height":"70%", "min-height":"650px"}),
@@ -327,6 +344,15 @@ style={"display": "grid"})
 
 
 ##### Callbacks
+
+#total-cases-counter
+@app.callback(
+    Output('total-cases-counter', 'children'),
+    Input('date-picker-single', 'date')
+)
+def create_total_cases_counter_callback(slider_date):
+    return getTotalCases(slider_date)
+
 
 #Date-picker
 @app.callback(
