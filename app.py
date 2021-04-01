@@ -248,6 +248,13 @@ def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
     portugal_new_infections_7average_data_color["color"] = ["green"]
     color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
+    color_interval(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
+
+    color_text = {
+        "yellow":"Regional Lockdown",
+        "green": "No Lockdown",
+        "red": "Full Lockdown"
+    }
 
     data = []
     for i in range(len(portugal_new_infections_7average_data_color.values.tolist())):
@@ -257,7 +264,9 @@ def create_slider_timeline(slider_date):
         data.append(dict(type='scatter',
                          y=row,
                          x=portugal_new_infections_7average_data.columns,
-                         name=name,
+                         name="",
+                         text = color_text[color],
+                         hoverinfo="text",
                          fill='tozeroy',
                          line=dict(color=color)
                          ))
