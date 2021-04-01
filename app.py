@@ -95,7 +95,7 @@ def getTotalCases(selected_date):
                 selected_date = x
                 break
             
-    return np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
+    return 'Total number of cases: %d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
 
 #Choropleth
 class Region(Enum):
