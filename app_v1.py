@@ -3,23 +3,21 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-
-##### Imports
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import datetime
 import time
+from dash.dependencies import Input, Output
 import json
 import pandas as pd
 import plotly.graph_objs as go
 import numpy as np
-import statistics
-from dash.dependencies import Input, Output
-from helper_functions import color_interval, date_range
-from enum import Enum
 
-##### Auxiliary functions
+import statistics
+
+from helper_functions import color_interval, date_range
+
 def unixToDatetime(unix):
     ''' Convert unix timestamp to datetime. '''
     return pd.to_datetime(unix,unit='s')
@@ -37,61 +35,100 @@ def getMarks(start, end, Nth=1):
 
     return result
 
+#style
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-##### Data Load
-
-#df_new_concelhos
+#Data load
 df_new_concelhos = pd.read_csv("Data/new_infections_concelhos.csv")
 dates = df_new_concelhos.iloc[:,0].tolist()
 dates_timestamp = [datetime.datetime.strptime(date,'%Y-%m-%d').timestamp() for date in dates]
 df_new_concelhos = df_new_concelhos.set_index("data")
 
-#df_new_per100k_concelhos
 df_new_per100k_concelhos = pd.read_csv("Data/new_infections_per100k_concelhos.csv")
 df_new_per100k_concelhos = df_new_per100k_concelhos.set_index("data")
 
-#df_cumulative_per100k_concelhos
 df_cumulative_per100k_concelhos = pd.read_csv("Data/cumulative_per100k_concelhos.csv")
 df_cumulative_per100k_concelhos = df_cumulative_per100k_concelhos.set_index("data")
 
-#df_cumulative_concelhos
 df_cumulative_concelhos = pd.read_csv("Data/cumulative_concelhos.csv")
 df_cumulative_concelhos = df_cumulative_concelhos.set_index("data")
 
-#portugal_new_infections_7average_data
+
 portugal_new_infections_7average_data= pd.read_csv("./Data/time_series_covid19_confirmed_new_infections_7average_portugal.csv")
 portugal_new_infections_7average_data = portugal_new_infections_7average_data.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
 portugal_new_infections_7average_data = portugal_new_infections_7average_data[date_range(dates[0],dates[-1])]
 
+radios_div = html.Div([
+            dcc.RadioItems(
+                id='cumulative-radio',
+                options=[{'label': i, 'value': i} for i in ['New Infections', 'Cumulative']],
+                value='New Infections',
+                labelStyle={'display': 'inline-block'}
+            ),
+            dcc.RadioItems(
+                id='absolute-radio',
+                options=[{'label': i, 'value': i} for i in ['Per 100k Inhabitants', 'Absolute']],
+                value='Per 100k Inhabitants',
+                labelStyle={'display': 'inline-block'}
+            )
+        ])
+
+date_picker = dcc.DatePickerSingle(
+        id='date-picker-single',
+        min_date_allowed=datetime.date.fromisoformat(dates[0]),
+        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
+        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
+        date=datetime.date.fromisoformat(dates[-1])
+    ) 
+slider_div = html.Div([
+dcc.Graph(id='slider-timeline', style={'width':'500px', 'float':'left','marginLeft': 20, 'marginRight': 20}),
+dcc.Slider(
+        id='year_slider',
+        min = min(dates_timestamp),
+        max = max(dates_timestamp),
+        value = min(dates_timestamp),
+        marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp))),
+        style={'width':'500px', 'float':'left','marginLeft': 20, 'marginRight': 20}
+    )
 
 
+])
+#container layout and elements
+app.layout = html.Div([
+    radios_div,
+    dcc.Graph(id='graph-with-slider'),
+    date_picker,
+    slider_div
+])
+
+#Date Slider callback
+@app.callback(
+    Output('date-picker-single', 'date'),
+    Input('year_slider', 'value'))
+def slider_callback(selected_date):
+    selected_date_str = str(unixToDatetime(selected_date).date())
+    return datetime.date.fromisoformat(selected_date_str)
 
 
+#callback after date picker interaction
+@app.callback(
+    Output('graph-with-slider', 'figure'),
+    Input('date-picker-single', 'date'),
+    Input('absolute-radio', 'value'),
+    Input('cumulative-radio', 'value')
+)
+def create_choropleth_callback(selected_date, absolute, cumulative):
+    return create_choropleth(selected_date, absolute, cumulative)
 
-##### Components
-#Radio Buttons
-radios_div = \
-    html.Div([
-        dcc.RadioItems(
-            id='cumulative-radio',
-            options=[{'label': i, 'value': i} for i in ['New Infections', 'Cumulative']],
-            value='New Infections',
-            labelStyle={'display': 'inline-block'}
-        ),
-        dcc.RadioItems(
-            id='absolute-radio',
-            options=[{'label': i, 'value': i} for i in ['Per 100k Inhabitants', 'Absolute']],
-            value='Per 100k Inhabitants',
-            labelStyle={'display': 'inline-block'}
-        )
-    ])
+@app.callback(
+    Output('slider-timeline', 'figure'),
+    Input('date-picker-single', 'date')
+)
+def create_slider_timeline_callback(slider_date):
+    return create_slider_timeline(slider_date)
 
-#Choropleth
-class Region(Enum):
-    CONTINENT = 1
-    MADEIRA = 2
-    AZORES = 3
-def create_choropleth(selected_date, absolute, cumulative, output_region):
+def create_choropleth(selected_date, absolute, cumulative):
     if absolute == "Absolute" and cumulative == 'New Infections':
         df = df_new_concelhos
         quantiles = []
@@ -151,66 +188,42 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
                 selected_date = x
                 break
 
-    if output_region == Region.CONTINENT:
-        # update all the continente data with the values from df_concelhos
-        for i in continente_data.index.tolist():
-            concelho = continente_data.iloc[i,1]
-            try:
-                continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
-            except Exception as e:
-                print("Exception: ", e)
 
-        return createFigure(continente, continente_data, max)
-    
-    elif output_region == Region.MADEIRA:
-        # update all the madeira data with the values from df_concelhos
-        for i in madeira_data.index.tolist():
-            concelho = madeira_data.iloc[i,1]
-            try:
-                madeira_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
-            except Exception as e:
-                print("Exception: ", e)
-        return createFigure(madeira, madeira_data, max)
-
-    else:
-        # update all the azores data with the values from df_concelhos
-        for i in azores_data.index.tolist():
-            concelho = azores_data.iloc[i,1]
-            try:
-                azores_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
-            except Exception as e:
-                print("Exception: ", e)
-        return createFigure(azores, azores_data, max)
+    # update all the continente data with the values from df_concelhos
+    for i in continente_data.index.tolist():
+        concelho = continente_data.iloc[i,1]
+        continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
 
 
-palette = {
-    'cutoff': 'rgba(227, 78, 38, 1)',
-    'wave1': 'rgba(247, 141, 31, 0.7)',
-    'wave2': 'rgba(227, 78, 38, 1)',
-    'scale0': 'rgba(172, 185, 54, 0)',
-    'scale1': 'rgba(0, 120, 128, 1)',
-    'scale2': 'rgba(0, 102, 102, 1)',
-    'scale3': 'rgba(0, 70, 70, 1)',
-    'borders': 'rgba(0, 0, 0, 1)',
-    'text': 'rgba(114, 114, 114, 1)',
-    'legendtext': 'black',
-    'bartext': 'black',
-    'bartitletext': 'black',
-    'bubbletext': 'black'
-}
-def createFigure(region, region_data, max_value):
+
+
+    palette = {'cutoff': 'rgba(227, 78, 38, 1)',
+               'wave1': 'rgba(247, 141, 31, 0.7)',
+               'wave2': 'rgba(227, 78, 38, 1)',
+               'scale0': 'rgba(172, 185, 54, 0)',
+               'scale1': 'rgba(0, 120, 128, 1)',
+               'scale2': 'rgba(0, 102, 102, 1)',
+               'scale3': 'rgba(0, 70, 70, 1)',
+               'borders': 'rgba(0, 0, 0, 1)',
+               'text': 'rgba(114, 114, 114, 1)',
+               'legendtext': 'black',
+               'bartext': 'black',
+               'bartitletext': 'black',
+               'bubbletext': 'black'
+               }
+
     # %%
     fig = go.Figure()
 
     ## Choropleth map ######
     fig.add_choropleth(
-        geojson=region, 
-        locations=region_data.id,
-        z=region_data.value,
+        geojson=continente, 
+        locations=continente_data.id,
+        z=continente_data.value,
         colorscale="teal",
         zmin=0,
-        zmax=max_value,
-        hovertext=region_data.concelho,
+        zmax=max,
+        hovertext=continente_data.concelho,
         hoverinfo="text",
         colorbar=dict(
             title={
@@ -231,33 +244,10 @@ def createFigure(region, region_data, max_value):
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=700)
     return fig
 
-
-
-#Slider-Timeline
-slider_div = html.Div([
-dcc.Graph(id='slider-timeline'),
-html.Div(
-    [dcc.Slider(
-            id='year_slider',
-            min = min(dates_timestamp),
-            max = max(dates_timestamp),
-            value = min(dates_timestamp),
-            marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
-        )
-    ])
-])
-
 def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
     portugal_new_infections_7average_data_color["color"] = ["green"]
     color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
-    color_interval(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
-
-    color_text = {
-        "yellow":"Regional Lockdown",
-        "green": "No Lockdown",
-        "red": "Full Lockdown"
-    }
 
     data = []
     for i in range(len(portugal_new_infections_7average_data_color.values.tolist())):
@@ -267,9 +257,7 @@ def create_slider_timeline(slider_date):
         data.append(dict(type='scatter',
                          y=row,
                          x=portugal_new_infections_7average_data.columns,
-                         name="",
-                         text = color_text[color],
-                         hoverinfo="text",
+                         name=name,
                          fill='tozeroy',
                          line=dict(color=color)
                          ))
@@ -297,96 +285,5 @@ def create_slider_timeline(slider_date):
     figure.add_vline(x=slider_date)
     return figure
 
-#Date Picker
-date_picker = dcc.DatePickerSingle(
-        id='date-picker-single',
-        min_date_allowed=datetime.date.fromisoformat(dates[0]),
-        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
-        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
-        date=datetime.date.fromisoformat(dates[-1])
-    ) 
-
-
-
-
-
-##### Dash
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-#container layout and elements
-app.layout = html.Div([
-    radios_div,
-
-    html.Div([
-        dcc.Graph(id='graph-with-slider', style={"height":"70%", "min-height":"650px"}),
-
-        html.Div([
-            dcc.Graph(id='graph-with-slider_madeira',  style={"height": "50%", "min-height":"310px"}),
-            dcc.Graph(id='graph-with-slider_azores',  style={"height": "50%", "min-height":"310px"})
-        ], style={"display": "grid"}),
-
-    ], style={"display": "grid", "grid-template-columns": "50% 50%"}),
-
-    date_picker,
-    slider_div
-],
-style={"display": "grid"})
-
-
-
-##### Callbacks
-
-#Date-picker
-@app.callback(
-    Output('slider-timeline', 'figure'),
-    Input('date-picker-single', 'date')
-)
-def create_slider_timeline_callback(slider_date):
-    return create_slider_timeline(slider_date)
-
-#Date Slider
-@app.callback(
-    Output('date-picker-single', 'date'),
-    Input('year_slider', 'value'))
-def slider_callback(selected_date):
-    selected_date_str = str(unixToDatetime(selected_date).date())
-    return datetime.date.fromisoformat(selected_date_str)
-
-#Choropleth (continent)
-@app.callback(
-    Output('graph-with-slider', 'figure'),
-    Input('date-picker-single', 'date'),
-    Input('absolute-radio', 'value'),
-    Input('cumulative-radio', 'value')
-)
-def create_choropleth_callback(selected_date, absolute, cumulative):
-    return create_choropleth(selected_date, absolute, cumulative, Region.CONTINENT)
-
-
-#Choropleth (madeira)
-@app.callback(
-    Output('graph-with-slider_madeira', 'figure'),
-    Input('date-picker-single', 'date'),
-    Input('absolute-radio', 'value'),
-    Input('cumulative-radio', 'value')
-)
-def create_choropleth_madeira_callback(selected_date, absolute, cumulative):
-    return create_choropleth(selected_date, absolute, cumulative, Region.MADEIRA)
-
-
-#Choropleth (azores)
-@app.callback(
-    Output('graph-with-slider_azores', 'figure'),
-    Input('date-picker-single', 'date'),
-    Input('absolute-radio', 'value'),
-    Input('cumulative-radio', 'value')
-)
-def create_choropleth_azores_callback(selected_date, absolute, cumulative):
-    return create_choropleth(selected_date, absolute, cumulative, Region.AZORES)
-
-
-
-##### MAIN
 if __name__ == '__main__':
     app.run_server(debug=True)
