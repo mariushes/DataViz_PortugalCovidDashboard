@@ -239,7 +239,12 @@ def createFigure(region, region_data, max_value):
         marker=dict(line=dict(width=1))
     )
     fig.update_geos(fitbounds="locations", bgcolor='rgba(0,0,0,0)', visible=False)
-    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=700)
+    fig.update_layout(
+        margin={"r":0,"t":0,"l":0,"b":0}, 
+        height=700, 
+        geo=dict(bgcolor= 'rgba(0,0,0,0)'),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)')
     return fig
 
 
@@ -329,26 +334,35 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div([
 
     html.Div([
-        radios_div,
-        html.H4('Progression of coronavirus in Portugal'),
+        
+        html.Div([
+            html.H4('Progression of coronavirus in Portugal'),
+            html.P('Filipe Coelho, m20200580'),
+            html.P('Ivan Kisialiou, m20200998'),
+            html.P('José Quintas, m20200673'),
+            html.P('Marius Hessenthaler, e20201824')
+        ], style={"display": "grid"}),
+        
+        radios_div,   
+        
         html.H4('0', id='total-cases-counter')
 
     ], style={"display": "grid", "grid-template-columns": "30% 30% 30%"}),
 
     html.Div([
-        dcc.Graph(id='graph-with-slider', style={"height":"70%", "min-height":"650px"}),
-
         html.Div([
             dcc.Graph(id='graph-with-slider_madeira',  style={"height": "50%", "min-height":"310px"}),
             dcc.Graph(id='graph-with-slider_azores',  style={"height": "50%", "min-height":"310px"})
         ], style={"display": "grid"}),
+
+        dcc.Graph(id='graph-with-slider', style={"height":"70%", "min-height":"650px"}),
 
     ], style={"display": "grid", "grid-template-columns": "50% 50%"}),
 
     date_picker,
     slider_div
 ],
-style={"display": "grid"})
+style={"display": "grid", "background-color":"#222222"})
 
 
 
