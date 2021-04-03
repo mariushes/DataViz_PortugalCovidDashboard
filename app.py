@@ -182,7 +182,9 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
             except Exception as e:
                 print("Exception: ", e)
 
-        return createFigure(madeira, madeira_data, max)
+        figure = createFigure(madeira, madeira_data, max)
+        figure.data[0].update(showscale=False)
+        return figure
 
     else:
         # update all the azores data with the values from df_concelhos
@@ -193,7 +195,9 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
             except Exception as e:
                 print("Exception: ", e)
 
-        return createFigure(azores, azores_data, max)
+        figure = createFigure(azores, azores_data, max)
+        figure.data[0].update(showscale=False)
+        return figure
 
 
 palette = {
