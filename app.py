@@ -181,6 +181,7 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
                 madeira_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
             except Exception as e:
                 print("Exception: ", e)
+
         return createFigure(madeira, madeira_data, max)
 
     else:
@@ -191,6 +192,7 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
                 azores_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
             except Exception as e:
                 print("Exception: ", e)
+
         return createFigure(azores, azores_data, max)
 
 
@@ -241,7 +243,6 @@ def createFigure(region, region_data, max_value):
     fig.update_geos(fitbounds="locations", bgcolor='rgba(0,0,0,0)', visible=False)
     fig.update_layout(
         margin={"r":0,"t":0,"l":0,"b":0}, 
-        height=700, 
         geo=dict(bgcolor= 'rgba(0,0,0,0)'),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)')
@@ -251,17 +252,15 @@ def createFigure(region, region_data, max_value):
 
 #Slider-Timeline
 slider_div = html.Div([
-dcc.Graph(id='slider-timeline'),
-html.Div(
-    [dcc.Slider(
-            id='year_slider',
-            min = min(dates_timestamp),
-            max = max(dates_timestamp),
-            value = min(dates_timestamp),
-            marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
-        )
-    ])
-])
+    dcc.Graph(id='slider-timeline'),
+    dcc.Slider(
+        id='year_slider',
+        min = min(dates_timestamp),
+        max = max(dates_timestamp),
+        value = min(dates_timestamp),
+        marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
+    )
+], style={"height":"35vh"})
 
 def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
@@ -301,12 +300,11 @@ def create_slider_timeline(slider_date):
                         'zeroline': False, # thick line at x=0
                         'visible': False,  # numbers below
                         },
-                  width=1400,
-                  height=200,
                   showlegend=False,
-                  margin=dict(l=30, r=0, t=20, b=0),
-                  paper_bgcolor='rgba(0,0,0,0)',
-                  plot_bgcolor='rgba(0,0,0,0)'
+                  #paper_bgcolor='rgba(0,0,0,0)',
+                  #plot_bgcolor='rgba(0,0,0,0)'
+                  paper_bgcolor='rgba(255,255,255,0)',
+                  plot_bgcolor='rgba(255,255,255,0)',
                   )
     figure = go.Figure(data=data,
                        layout=layout)
@@ -333,38 +331,49 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 #container layout and elements
 app.layout = html.Div([
 
-    html.Div([
-        
+        #left region
         html.Div([
-            html.H4('Progression of coronavirus in Portugal'),
-            html.P('Filipe Coelho, m20200580'),
-            html.P('Ivan Kisialiou, m20200998'),
-            html.P('José Quintas, m20200673'),
-            html.P('Marius Hessenthaler, e20201824')
-        ], style={"display": "grid"}),
-        
-        radios_div,   
-        
-        html.H4('0', id='total-cases-counter')
 
-    ], style={"display": "grid", "grid-template-columns": "30% 30% 30%"}),
+            #left-top region
+            html.Div([
 
-    html.Div([
-        html.Div([
-            dcc.Graph(id='graph-with-slider_madeira',  style={"height": "50%", "min-height":"310px"}),
-            dcc.Graph(id='graph-with-slider_azores',  style={"height": "50%", "min-height":"310px"})
-        ], style={"display": "grid"}),
+                #left column
+                html.Div([
 
-        dcc.Graph(id='graph-with-slider', style={"height":"70%", "min-height":"650px"}),
+                    #title
+                    html.Div([
+                        html.H3('Progression of coronavirus in Portugal'),
+                        html.P([
+                            'Filipe Coelho, m20200580', 
+                            html.Br(), 'Ivan Kisialiou, m20200998',
+                            html.Br(), 'José Quintas, m20200673',
+                            html.Br(), 'Marius Hessenthaler, e20201824'
+                        ])
+                    ], style={"display": "grid"}),
+                    
+                    date_picker,  
+                    radios_div,
+                    
+                    html.H4('0', id='total-cases-counter')
 
-    ], style={"display": "grid", "grid-template-columns": "50% 50%"}),
+                ], style={"display": "grid"}),
 
-    date_picker,
-    slider_div
-],
-style={"display": "grid", "background-color":"#222222"})
+                #right-column
+                html.Div([
+                    dcc.Graph(id='graph-with-slider_madeira',  style={"height": "20vh"}),
+                    dcc.Graph(id='graph-with-slider_azores',  style={"height": "20vh"})
+                ], style={"display": "grid"})
 
+            ], style={"display": "grid", "grid-template-columns": "50% 50%"}),
 
+            slider_div
+
+        ], style={"display": "grid", "background-color":"#ffffff", "height":"98vh"}),
+
+        #CONTINENT GEOPLOT
+        dcc.Graph(id='graph-with-slider'),
+
+    ],style={"display": "grid", "background-color":"#ffffff", "grid-template-columns": "66% 33.66%", "height":"98vh"})
 
 ##### Callbacks
 
