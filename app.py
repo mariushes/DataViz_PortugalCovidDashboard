@@ -18,6 +18,11 @@ import statistics
 from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
 from enum import Enum
+import datetime
+#from datetime import date, datetime, time
+
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
 
 ##### Auxiliary functions
 def unixToDatetime(unix):
@@ -102,6 +107,7 @@ class Region(Enum):
     CONTINENT = 1
     MADEIRA = 2
     AZORES = 3
+
 def create_choropleth(selected_date, absolute, cumulative, output_region):
     if absolute == "Absolute" and cumulative == 'New Infections':
         df = df_new_concelhos
