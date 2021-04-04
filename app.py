@@ -338,6 +338,8 @@ date_picker = dcc.DatePickerSingle(
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+server = app.server
+
 #container layout and elements
 app.layout = html.Div([
 
