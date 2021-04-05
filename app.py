@@ -164,11 +164,6 @@ def getTotalCases(selected_date):
             if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
                 selected_date = x
                 break
-<<<<<<< HEAD
-
-    return 'Total number of cases: %d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
-=======
->>>>>>> deploy
 
     return '%d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
 
@@ -410,85 +405,8 @@ def createFigure(region, region_data, max_value):
         margin={"r":0,"t":0,"l":0,"b":0},
         geo=dict(bgcolor= 'rgba(0,0,0,0)'),
         paper_bgcolor='rgba(0,0,0,0)',
-<<<<<<< HEAD
-        plot_bgcolor='rgba(0,0,0,0)')
-    return fig
-
-
-
-#Slider-Timeline
-slider_div = html.Div([
-    dcc.Graph(id='slider-timeline'),
-    dcc.Slider(
-        id='year_slider',
-        min = min(dates_timestamp),
-        max = max(dates_timestamp),
-        value = min(dates_timestamp),
-        marks = getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp)))
-    )
-], style={"height":"35vh"})
-
-def create_slider_timeline(slider_date):
-    portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
-    portugal_new_infections_7average_data_color["color"] = ["green"]
-    color_interval(portugal_new_infections_7average_data_color, ["2020-10-27", "2021-01-15"], ["2020-11-27", "2021-02-15"], ["yellow", "red"])
-
-    color_text = {
-        "yellow":"Regional Lockdown",
-        "green": "No Lockdown",
-        "red": "Full Lockdown"
-    }
-
-    data = []
-    for i in range(len(portugal_new_infections_7average_data_color.values.tolist())):
-        row = portugal_new_infections_7average_data_color.values.tolist()[i]
-        name = ""
-        color = row.pop(len(row) - 1)
-        data.append(dict(type='scatter',
-                         y=row,
-                         x=portugal_new_infections_7average_data.columns,
-                         name="",
-                         text = color_text[color],
-                         hoverinfo="text",
-                         fill='tozeroy',
-                         line=dict(color=color)
-                         ))
-
-    layout = dict(title=dict(text=''),
-                  xaxis={
-                      'showgrid': False,  # thin lines in the background
-                      'zeroline': False,  # thick line at x=0
-                      'visible': False,  # numbers below
-                  },
-                  yaxis= {
-                        'showgrid': False, # thin lines in the background
-                        'zeroline': False, # thick line at x=0
-                        'visible': False,  # numbers below
-                        },
-                  showlegend=False,
-                  #paper_bgcolor='rgba(0,0,0,0)',
-                  #plot_bgcolor='rgba(0,0,0,0)'
-                  paper_bgcolor='rgba(255,255,255,0)',
-                  plot_bgcolor='rgba(255,255,255,0)',
-                  )
-    figure = go.Figure(data=data,
-                       layout=layout)
-    figure.add_vline(x=slider_date)
-    return figure
-
-#Date Picker
-date_picker = dcc.DatePickerSingle(
-        id='date-picker-single',
-        min_date_allowed=datetime.date.fromisoformat(dates[0]),
-        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
-        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
-        date=datetime.date.fromisoformat(dates[-1])
-    )
-
-=======
         plot_bgcolor='rgba(0,0,0,0)',)
     #fig.update_layout()
->>>>>>> deploy
 
     return fig
 
@@ -558,23 +476,6 @@ right_block1 = html.Div(dcc.Graph(id='madeira',  style={"width": "100%"}),
                            }
 )
 
-<<<<<<< HEAD
-                    #title
-                    html.Div([
-                        html.H3('Progression of coronavirus in Portugal'),
-                        html.P([
-                            'Filipe Coelho, m20200580',
-                            html.Br(), 'Ivan Kisialiou, m20200998',
-                            html.Br(), 'José Quintas, m20200673',
-                            html.Br(), 'Marius Hessenthaler, e20201824'
-                        ])
-                    ], style={"display": "grid"}),
-
-                    date_picker,
-                    radios_div,
-
-                    html.H4('0', id='total-cases-counter')
-=======
 right_block2 = html.Div(dcc.Graph(id='azores',  style={"width": "100%"}),
                         style={
                           "display": "grid",
@@ -586,7 +487,6 @@ right_block2 = html.Div(dcc.Graph(id='azores',  style={"width": "100%"}),
                           "margin-top": "1.2%"
                            }
 )
->>>>>>> deploy
 
 # Sub-columns in Left Top Region
 left_column = html.Div([left_block1, left_block2, left_block3, left_block4],
