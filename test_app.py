@@ -253,7 +253,9 @@ def zoom_event(*params):
             fig["layout"]["geo"]["center"] = {'lon': relayout_data[signature]['geo.center.lon'],
                                               'lat': relayout_data[signature]['geo.center.lat']}
             fig["layout"]["geo"]["fitbounds"] = False
-            #print('success on rezoom')
+            print('success on rezoom')
+            print(relayout_data[signature]['geo.projection.rotation.lon'])
+            print('scale', relayout_data[signature]['geo.projection.scale'])
         except (KeyError, TypeError, IndexError):
             #print('fail on rezoom')
             #raise PreventUpdate
