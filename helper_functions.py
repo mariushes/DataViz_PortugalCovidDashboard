@@ -11,7 +11,7 @@ def date_range(date1, date2):
     return dates
 
 
-def color_interval(df, start, end, color):
+def color_interval_nonoverlap(df, start, end, color):
     zero_index = 0
     last_date = df.columns.tolist()[-2]
     first_date = df.columns.tolist()[0]
@@ -44,7 +44,7 @@ def color_interval(df, start, end, color):
 
     return df
 
-def color_interval_overlapping(df,start, end, color):
+def color_interval(df,start, end, color):
     date_list = date_range(start, end)
     values = df.loc[0,date_list]
     nan_array = np.empty(len(date_list))

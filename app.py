@@ -80,6 +80,11 @@ portugal_new_infections_7average_data= pd.read_csv("./Data/time_series_covid19_c
 portugal_new_infections_7average_data = portugal_new_infections_7average_data.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
 portugal_new_infections_7average_data = portugal_new_infections_7average_data[date_range(dates[0],dates[-1])]
 
+#portugal_cumulative_cases
+portugal_cumulative_cases = pd.read_csv("./Data/time_series_covid19_confirmed_portugal.csv")
+portugal_cumulative_cases = portugal_cumulative_cases.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
+portugal_cumulative_cases = portugal_cumulative_cases[date_range(dates[0],dates[-1])]
+
 
 
 ### Components
@@ -159,13 +164,14 @@ counter_div = html.Div([html.P('Total Cases: ', style={"color":'white'}),
 )
 def getTotalCases(selected_date):
     # if the selected date is not in the available dates choose the next higher date.
+    """
     if selected_date not in dates:
         for x in dates:
             if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
                 selected_date = x
                 break
-
-    return '%d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
+    """
+    return portugal_cumulative_cases.loc[0,selected_date]
 
 # Date Picker
 date_picker = dcc.DatePickerSingle(
