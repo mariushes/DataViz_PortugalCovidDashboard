@@ -272,13 +272,13 @@ class Region(Enum):
 
 
 def create_choropleth(selected_date, absolute, cumulative, output_region):
-    if absolute == "Absolute" and cumulative == 'New Infections':
+    if absolute == "Absolute" and cumulative == 'New Cases':
         df = df_new_concelhos
         quantiles = []
         for column in df.columns:
             quantiles.append(df[column].quantile(0.95))
         max = np.max(quantiles)
-    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Infections':
+    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Cases':
         df = df_new_per100k_concelhos
         # compute max value for map choropleth
         quantiles = []
