@@ -558,17 +558,24 @@ left_region = html.Div([left_top_region, left_bottom_region],
 )
 
 # Right Global Region
-right_region = html.Div(dcc.Graph(id='continente',  style={"width": "100%"}),
-                      style={
-                         "display": "grid",
-                          "background-color": palette["block"],
-                          "height": "100%",
-                          "margin-left": "1.5%",
-                          "padding": "0% 1% 1% 1%", # t r b l
-                          "box-sizing": "border-box",
-                           #"position" : "relative"
-                           }
-)
+right_region = html.Div(
+        html.Div(
+            dcc.Graph(id='continente',  style={"width": "100%", "height": "100%"}),
+            style={
+                "position": "absolute",
+                "width": "100%",
+                "height": "100%",
+                "right": 0
+            }
+        ),
+        style={ "display": "grid",
+                "background-color": palette["block"],
+                "height" : "97vh",
+                "padding": "0.5% 0.5% 0.5% 0.5%",
+                "margin-left": "1%",
+                "box-sizing": "border-box"
+        }
+    )
 
 # container layout and elements
 app.layout = html.Div([
