@@ -170,7 +170,7 @@ def create_map_fig(date,
         )
     )
 
-    fig.update_geos(fitbounds="locations", bgcolor='rgba(0,0,0,0)', visible=False, projection={})
+    fig.update_geos(fitbounds="geojson", bgcolor='rgba(0,0,0,0)', visible=False, projection={})
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0},
                       # autosize=False,
                       # legend=dict(yanchor="bottom",
@@ -194,38 +194,39 @@ figs_continente = [create_map_fig(date, region='continente') for date in date_li
 # figs_azores = [create_map_fig(date, region='azores') for date in date_list]
 
 # Make lists of dccs (1 list for 1 div block)
-block_continente = html.Div(
-    [html.Button('Reset', id='reset', n_clicks=0)] + \
-     [dcc.Graph(id='graph_continente_{}'.format(i),
-               figure=figs_continente[i],
-                config={'displayModeBar': False}
-               ) for i in range(len(figs_continente))] + \
-    [dcc.Slider(
+slider = dcc.Slider(
         id='date_slider',
         min=0,
         max=len(date_list) - 1,
         value=0,
         marks=dict(zip(range(len(date_list)), date_list))
-    )]
+    )
+#print(slider.value)
+block_continente = html.Div(
+     [html.Button('Reset', id='reset', n_clicks=0)] + \
+     [dcc.Graph(id='graph_continente_{}'.format(i),
+                figure=figs_continente[i],
+                config={'displayModeBar': False}
+               ) for i in range(len(figs_continente))] + \
+     [slider]
 )
 
 # container layout and elements
 app.layout = html.Div([
                       block_continente,
                       ],
-    style={'width': '100%',
-           'float': 'left',
-           'marginLeft': 20,
-           'marginRight': 20}
+    id="layout",
+    style={'float': 'left',
+            'width' : "100%"}
 )
 
-# Date Slider callbacks
+# Date Slider callback
 @app.callback(
     [Output('graph_continente_{}'.format(i), 'style') for i in range(len(date_list))],
     Input('date_slider', 'value'))
 def slider_callback(selected_step):
     outputs = [{'display': 'none'} for i in range(3)]
-    outputs[selected_step] = {'display': 'block'}
+    outputs[selected_step] = {'display': 'grid'}
     return outputs
 
 # Zoom synchronization callbacks
@@ -236,12 +237,14 @@ def slider_callback(selected_step):
               [State('graph_continente_{}'.format(i), 'figure') for i in range(len(date_list))] +\
               [State('date_slider', 'value')]
               )
+
 def zoom_event(*params):
     num_inputs = int(len(params) / 2) - 1
     relayout_data = params[:num_inputs]
     figures = params[num_inputs+2:-1]
     signature = params[-1]
     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    #print("changed_id: ", changed_id)
     outputs = []
     for fig in figures:
         try:
@@ -250,135 +253,17 @@ def zoom_event(*params):
             fig["layout"]["geo"]["center"] = {'lon': relayout_data[signature]['geo.center.lon'],
                                               'lat': relayout_data[signature]['geo.center.lat']}
             fig["layout"]["geo"]["fitbounds"] = False
-
+            #print('success on rezoom')
         except (KeyError, TypeError, IndexError):
-            raise PreventUpdate
+            #print('fail on rezoom')
+            #raise PreventUpdate
+            pass
         if changed_id=='reset.n_clicks':
+            #print('success on reset')
             fig["layout"]["geo"]["fitbounds"] = 'geojson'
         outputs.append(fig)
     return outputs
 
-
 if __name__ == '__main__':
     app.run_server(debug=True)
 
-# old figure
-"""
-figlist_1 = []
-    figlist_2 = []
-    figlist_3 = []
-    dateslist = data_all_dates.date.unique()
-    for date in dateslist:
-        data = data_all_dates[data_all_dates.date == date]
-        data_locked = data[data.risk == 3]
-        ## Choropleth map ######
-        figlist_1.append(go.Choropleth(uid='trace1_{}s'%date,
-            geojson=geo, locations=data.id,
-            z=data.value,
-            colorscale="teal",
-            zmin=0,
-            zmax=100,
-            hovertext=data.concelho,
-            hoverinfo="text",
-            colorbar=dict(title={'text': '',
-                                 'font': {  # 'size':24,
-                                     'family': 'Arial',
-                                     'color': palette['text']},
-                                 'side': 'right'},
-                          tickfont={'size': 20,
-                                    'color': palette['bartext']},
-                          # ticks='outside',
-                          len=0.8,
-                          # x=0.1
-                          ),
-            marker=dict(line=dict(width=1)),
-            visible=False
-        )
-        )
-
-        ##### Risks markers #####
-        tracelist_2.append(
-            go.Scattergeo(
-                uid='trace1_{}s' % date,
-                lat=data_locked.lat.values,
-                lon=data_locked.lon.values,
-                mode='markers',
-                name='',
-                marker=dict(size=2,
-                            color='rgba(0,0,0,0)',
-                            # color='red',
-                            line={"width": 0},
-                            # symbol='x',
-                            ),
-                hovertemplate=data_locked.concelho,
-                hoverinfo="text",
-                showlegend=False,
-                visible=False
-            )
-        )
-
-        ## Risk borders ######
-        tracelist_3.append(go.Choropleth(
-            uid='trace1_{}s' % date,
-            geojson=geo, locations=data_locked.id,
-            z=[0 for i in range(len(data_locked))],
-            colorscale=[[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0)']],  # transparent
-            colorbar=dict(tickvals=[],
-                          ticktext=[]),
-            marker=dict(line=dict(width=1,
-                                  color='red')),
-            visible=False
-            # hovertext=''
-        )
-        )
-
-    # Create figure
-    fig = go.Figure(data=tracelist_1 + tracelist_2 + tracelist_3)
-
-    # Define steps
-    steps = []
-    num_steps = len(data_all_dates.date.unique())
-    for i in range(num_steps):
-        # Hide all traces
-        step = dict(
-            method='restyle',
-            args=['visible', [False] * len(fig.data)],
-        )
-        # Enable the two traces we want to see
-        step['args'][1][i] = True
-        step['args'][1][i + num_steps] = True
-        step['args'][1][i + 2 * num_steps] = True
-
-        # Add step to step list
-        steps.append(step)
-
-    # Create and add slider
-    sliders = [dict(
-        active=slider_step,
-        currentvalue={"prefix": "Date: "},
-        pad={"t": 50},
-        steps=steps,
-        visible=show_slider
-    )]
-    fig.data[slider_step].visible = True
-    fig.data[slider_step + num_steps].visible = True
-    fig.data[slider_step + 2*num_steps].visible = True
-
-    fig.layout.sliders = sliders
-
-    fig.update_geos(fitbounds="locations", bgcolor='rgba(0,0,0,0)', visible=False)
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                      # autosize=False,
-                      # legend=dict(yanchor="bottom",
-                      #            y=0.09,
-                      #            xanchor="left",
-                      #            x=0.2,
-                      #            #orientation='h'
-                      #            font = {'size' : 22,
-                      #                    'color': palette['legendtext']}
-                      #           ),
-                      paper_bgcolor='rgba(0,0,0,0)',
-                      plot_bgcolor='rgba(0,0,0,0)'
-                      )
-    fig.update_layout(uirevision=False)
-    return fig"""
