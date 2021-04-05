@@ -15,7 +15,7 @@ import plotly.graph_objs as go
 import numpy as np
 import statistics
 from dash.dependencies import Input, Output
-from helper_functions import color_interval, date_range
+from helper_functions import color_interval, date_range, color_interval_overlapping
 from enum import Enum
 
 ####
@@ -214,8 +214,8 @@ timeline = html.Div(dcc.Graph(id='slider-timeline',
 def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
     portugal_new_infections_7average_data_color["color"] = ["green"]
-    color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
-    color_interval(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
+    color_interval_overlapping(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
+    color_interval_overlapping(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
 
     color_text = {
         "yellow":"Regional Lockdown",
@@ -271,13 +271,13 @@ class Region(Enum):
 
 
 def create_choropleth(selected_date, absolute, cumulative, output_region):
-    if absolute == "Absolute" and cumulative == 'New Infections':
+    if absolute == "Absolute" and cumulative == 'New Cases':
         df = df_new_concelhos
         quantiles = []
         for column in df.columns:
             quantiles.append(df[column].quantile(0.95))
         max = np.max(quantiles)
-    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Infections':
+    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Cases':
         df = df_new_per100k_concelhos
         # compute max value for map choropleth
         quantiles = []
