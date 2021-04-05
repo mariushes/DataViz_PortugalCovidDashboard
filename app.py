@@ -3,13 +3,12 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-
 ##### Imports
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import datetime
-import time
+from time import time
 import json
 import pandas as pd
 import plotly.graph_objs as go
@@ -18,6 +17,19 @@ import statistics
 from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
 from enum import Enum
+
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
+####
+
+palette = {
+    'background' : 'rgba(20, 20, 50, 1)',
+    'block' : 'rgba(50, 50, 50, 1)',
+    'borders': 'rgba(0, 0, 0, 1)',
+    'text': 'rgba(114, 114, 114, 1)',
+    'legendtext': 'black',
+    'bartext': 'black',
+}
 
 ##### Auxiliary functions
 def unixToDatetime(unix):
@@ -33,12 +45,17 @@ def getMarks(start, end, Nth=1):
     for i, date in enumerate(daterange):
         if(i%Nth == 1):
             # Append value to dict
-            result[unixTimeMillis(date)] = str(date.strftime('%Y-%m-%d'))
+            result[time.unixTimeMillis(date)] = str(date.strftime('%Y-%m-%d'))
 
     return result
 
+##### Dash
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-##### Data Load
+server = app.server
+
+##### DATA LOAD
 
 #df_new_concelhos
 df_new_concelhos = pd.read_csv("Data/new_infections_concelhos.csv")
@@ -65,28 +82,81 @@ portugal_new_infections_7average_data = portugal_new_infections_7average_data[da
 
 
 
+### Components
+# Slider-Timeline
+slider_div = html.Div([html.H4('Slider div', style={"color":'white'})],
+                      style={
+                         "display": "grid",
+                          "background-color": "#222222"
 
+                           }
+)
 
+##### COMPONENTS
+# Title
+title_div = html.Div([
+                      html.H4('Progression of coronavirus in Portugal',
+                              style={"color":'red',
+                                     "font-size": 20,
+                                     "font-weight" : 'bold'
+                              }),
+                      html.P('Filipe Coelho, m20200580', style={"color":'white'}),
+                      html.P('Ivan Kisialiou, m20200998', style={"color":'white'}),
+                      html.P('José Quintas, m20200673', style={"color":'white'}),
+                      html.P('Marius Hessenthaler, e20201824', style={"color":'white'})
+                     ],
+                     style={
+                          "font-size": 12,
+                          "display": "grid",
+                          "padding" : "1% 1% 1% 1%",
+                          "box-sizing": "border-box",
+                          #"height" : "20vh"
+                           }
+)
 
-##### Components
 #Radio Buttons
 radios_div = \
     html.Div([
         dcc.RadioItems(
             id='cumulative-radio',
-            options=[{'label': i, 'value': i} for i in ['New Infections', 'Cumulative']],
-            value='New Infections',
-            labelStyle={'display': 'inline-block'}
+            options=[{'label': i, 'value': i} for i in ['Cumulative', 'New Cases']],
+            value='Cumulative',
+            labelStyle={'display': 'block'},
+            style={"color" : "white",
+                   "background-color":palette["block"],
+                   "font-size" : 16,
+                   "padding-top":"13%"}
         ),
         dcc.RadioItems(
             id='absolute-radio',
-            options=[{'label': i, 'value': i} for i in ['Per 100k Inhabitants', 'Absolute']],
-            value='Per 100k Inhabitants',
-            labelStyle={'display': 'inline-block'}
+            options=[{'label': i, 'value': i} for i in ['Absolute', 'Per 100k Inhabitants']],
+            value='Absolute',
+            labelStyle={'display': 'block'},
+            style={"color" : "white",
+                   "background-color":palette["block"],
+                   "font-size" : 16,
+                   "margin-left" : "2%",
+                   "padding-top" : "10%"}
         )
-    ])
+    ],
+        style={'display': 'grid',
+               "grid-template-columns": "40% 60%",
+               "box-sizing" : "border-box",
+               'padding': "0% 0% 0% 0%"}
+    )
 
-#total-cases-counter
+# counter of cases
+counter_div = html.Div([html.P('Total Cases: ', style={"color":'white'}),
+                        html.P('0', id='total-cases-counter', style={"color":'white', "font-size": 30,
+                              "text-align" :'center',})],
+                      style={"padding": "5% 0% 0% 2%",
+                             "display":"grid",
+                             "grid-template-columns": "40% 60%",
+                             "font-size": 20,
+                         #"display": "grid",
+                         #"background-color": "#222222"
+                           }
+)
 def getTotalCases(selected_date):
     # if the selected date is not in the available dates choose the next higher date.
     if selected_date not in dates:
@@ -94,22 +164,129 @@ def getTotalCases(selected_date):
             if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
                 selected_date = x
                 break
+<<<<<<< HEAD
 
     return 'Total number of cases: %d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
+=======
+>>>>>>> deploy
 
-#Choropleth
+    return '%d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
+
+# Date Picker
+date_picker = dcc.DatePickerSingle(
+        id='date-picker-single',
+        min_date_allowed=datetime.date.fromisoformat(dates[0]),
+        max_date_allowed=datetime.date.fromisoformat(dates[-1]),
+        initial_visible_month=datetime.date.fromisoformat(dates[-1]),
+        date=datetime.date.fromisoformat(dates[-1]),
+        with_portal=True,
+        style={"color":'white',
+               "background-color" : palette["block"]}
+    )
+
+# Slider-Timeline
+
+slider = html.Div(dcc.Slider(
+                            id='date_slider',
+                            min=min(dates_timestamp),
+                            max=max(dates_timestamp),
+                            value=min(dates_timestamp),
+                            marks=getMarks(unixToDatetime(min(dates_timestamp)), unixToDatetime(max(dates_timestamp))),
+                            included=False,
+                            updatemode="drag"
+                             ),
+                   style={
+                          #"width":"100%",
+                           "margin-top":"1%",
+                          "display":"grid",
+                          "padding-left":0,
+                          "background-color":palette["background"]}
+)
+timeline = html.Div(dcc.Graph(id='slider-timeline',
+                              style={"display":"grid",
+                                     "height":"100%", #"width":"93.8%",
+                                     "padding-left":"3.9vh",
+                                     "padding-right":"4vh"
+                                     #"padding-top":0,
+                                     #"padding-bottom":0,
+                                     #"box-sizing": "border-box"
+                                      },
+                              config={"responsive":True, 'displayModeBar': False}),
+                   style={"height":"100%",
+                          "display":"grid",
+                          "background-color":palette["block"],
+                          "padding-bottom":"1%",
+                          "box-sizing": "border-box"
+                          }
+                    )
+
+def create_slider_timeline(slider_date):
+    portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
+    portugal_new_infections_7average_data_color["color"] = ["green"]
+    color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
+    color_interval(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
+
+    color_text = {
+        "yellow":"Regional Lockdown",
+        "green": "No Lockdown",
+        "red": "Full Lockdown"
+    }
+
+    data = []
+    for i in range(len(portugal_new_infections_7average_data_color.values.tolist())):
+        row = portugal_new_infections_7average_data_color.values.tolist()[i]
+        name = ""
+        color = row.pop(len(row) - 1)
+        data.append(dict(type='scatter',
+                         y=row,
+                         x=portugal_new_infections_7average_data.columns,
+                         name="",
+                         text = color_text[color],
+                         hoverinfo="text",
+                         fill='tozeroy',
+                         line=dict(color=color)
+                         ))
+
+    layout = dict(title=dict(text=''),
+                  xaxis={
+                      'showgrid': False,  # thin lines in the background
+                      'zeroline': False,  # thick line at x=0
+                      'visible': False,  # numbers below
+                  },
+                  yaxis= {
+                        'showgrid': False, # thin lines in the background
+                        'zeroline': False, # thick line at x=0
+                        'visible': False,  # numbers below
+                        },
+                  showlegend=False,
+                  paper_bgcolor='rgba(255,255,255,0)',
+                  plot_bgcolor='rgba(255,255,255,0)',
+                  )
+    figure = go.Figure(data=data,
+                       layout=layout)
+    figure.update_layout(autosize=True,
+                         margin={"autoexpand":False,
+                                 "t":0, "b":0, "l":0, "r":0
+                                }
+    )
+    figure.add_vline(x=slider_date, line_width=2, line_color="white")
+    return figure
+
+# Choropleth
 class Region(Enum):
     CONTINENT = 1
     MADEIRA = 2
     AZORES = 3
+
+
 def create_choropleth(selected_date, absolute, cumulative, output_region):
-    if absolute == "Absolute" and cumulative == 'New Infections':
+    if absolute == "Absolute" and cumulative == 'New Cases':
         df = df_new_concelhos
         quantiles = []
         for column in df.columns:
             quantiles.append(df[column].quantile(0.95))
         max = np.max(quantiles)
-    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Infections':
+    elif absolute == "Per 100k Inhabitants" and cumulative == 'New Cases':
         df = df_new_per100k_concelhos
         # compute max value for map choropleth
         quantiles = []
@@ -140,7 +317,6 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
     for feature in azores["features"]:
         feature['id'] = feature['properties']['CCA_2']
 
-
     # generate data
     data_list = []
 
@@ -165,9 +341,9 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
     if output_region == Region.CONTINENT:
         # update all the continente data with the values from df_concelhos
         for i in continente_data.index.tolist():
-            concelho = continente_data.iloc[i,1]
+            concelho = continente_data.iloc[i, 1]
             try:
-                continente_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+                continente_data.iloc[i, 2] = df.loc[selected_date, concelho.lower()]
             except Exception as e:
                 print("Exception: ", e)
 
@@ -176,9 +352,9 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
     elif output_region == Region.MADEIRA:
         # update all the madeira data with the values from df_concelhos
         for i in madeira_data.index.tolist():
-            concelho = madeira_data.iloc[i,1]
+            concelho = madeira_data.iloc[i, 1]
             try:
-                madeira_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+                madeira_data.iloc[i, 2] = df.loc[selected_date, concelho.lower()]
             except Exception as e:
                 print("Exception: ", e)
 
@@ -189,9 +365,9 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
     else:
         # update all the azores data with the values from df_concelhos
         for i in azores_data.index.tolist():
-            concelho = azores_data.iloc[i,1]
+            concelho = azores_data.iloc[i, 1]
             try:
-                azores_data.iloc[i,2] = df.loc[selected_date,concelho.lower()]
+                azores_data.iloc[i, 2] = df.loc[selected_date, concelho.lower()]
             except Exception as e:
                 print("Exception: ", e)
 
@@ -199,22 +375,6 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
         figure.data[0].update(showscale=False)
         return figure
 
-
-palette = {
-    'cutoff': 'rgba(227, 78, 38, 1)',
-    'wave1': 'rgba(247, 141, 31, 0.7)',
-    'wave2': 'rgba(227, 78, 38, 1)',
-    'scale0': 'rgba(172, 185, 54, 0)',
-    'scale1': 'rgba(0, 120, 128, 1)',
-    'scale2': 'rgba(0, 102, 102, 1)',
-    'scale3': 'rgba(0, 70, 70, 1)',
-    'borders': 'rgba(0, 0, 0, 1)',
-    'text': 'rgba(114, 114, 114, 1)',
-    'legendtext': 'black',
-    'bartext': 'black',
-    'bartitletext': 'black',
-    'bubbletext': 'black'
-}
 def createFigure(region, region_data, max_value):
     # %%
     fig = go.Figure()
@@ -229,6 +389,7 @@ def createFigure(region, region_data, max_value):
         zmax=max_value,
         hovertext=region_data.concelho,
         hoverinfo="text",
+        showscale = False,
         colorbar=dict(
             title={
                 'text': '',
@@ -249,6 +410,7 @@ def createFigure(region, region_data, max_value):
         margin={"r":0,"t":0,"l":0,"b":0},
         geo=dict(bgcolor= 'rgba(0,0,0,0)'),
         paper_bgcolor='rgba(0,0,0,0)',
+<<<<<<< HEAD
         plot_bgcolor='rgba(0,0,0,0)')
     return fig
 
@@ -323,26 +485,80 @@ date_picker = dcc.DatePickerSingle(
         date=datetime.date.fromisoformat(dates[-1])
     )
 
+=======
+        plot_bgcolor='rgba(0,0,0,0)',)
+    #fig.update_layout()
+>>>>>>> deploy
+
+    return fig
 
 
 
+### PAGE STRUCTURE
+# Minor Blocks
+# Left Block 1
+left_block1 = html.Div([title_div],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["block"],
+                          "height" : "100%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          #"margin-top": "2%"
+                           }
+)
 
-##### Dash
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+left_block2 = html.Div([counter_div],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["block"],
+                          "height" : "100%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          "margin-top": "1.6%"
+                           }
+)
 
-#container layout and elements
-app.layout = html.Div([
+left_block3 = html.Div([radios_div],
+                        style={
+                          "display": "grid",
+                          "font-color" : "white",
+                          "background-color": palette["background"],
+                          "height" : "100%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          "margin-top": "3.2%"
+                           }
+)
 
-        #left region
-        html.Div([
+left_block4 = html.Div([date_picker],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["block"],
+                          "height" : "100%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          "margin-top": "4.7%"
+                           }
+)
 
-            #left-top region
-            html.Div([
+right_block1 = html.Div(dcc.Graph(id='madeira',  style={"width": "100%"}),
+                        style={
+                          "display": "grid",
+                          "background-color": palette["block"],
+                          "height" : "100%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          #"margin-top": "2%"
+                           }
+)
 
-                #left column
-                html.Div([
-
+<<<<<<< HEAD
                     #title
                     html.Div([
                         html.H3('Progression of coronavirus in Portugal'),
@@ -358,28 +574,122 @@ app.layout = html.Div([
                     radios_div,
 
                     html.H4('0', id='total-cases-counter')
+=======
+right_block2 = html.Div(dcc.Graph(id='azores',  style={"width": "100%"}),
+                        style={
+                          "display": "grid",
+                          "background-color": palette["block"],
+                          "height" : "100%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          "margin-top": "1.2%"
+                           }
+)
+>>>>>>> deploy
 
-                ], style={"display": "grid"}),
+# Sub-columns in Left Top Region
+left_column = html.Div([left_block1, left_block2, left_block3, left_block4],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["background"],
+                          "height" : "100%",
+                          "grid-template-rows": "41.5% 23% 22% 10%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          #"margin-top": "2%"
+                           }
+)
 
-                #right-column
-                html.Div([
-                    dcc.Graph(id='graph-with-slider_madeira',  style={"height": "20vh"}),
-                    dcc.Graph(id='graph-with-slider_azores',  style={"height": "20vh"})
-                ], style={"display": "grid"})
+# Right sub-column in left region
+right_column = html.Div([right_block1, right_block2],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["background"],
+                          "height" : "100%",
+                          "grid-template-rows": "50% 48.8%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          "margin-left": "1.2%"
+                        }
+)
 
-            ], style={"display": "grid", "grid-template-columns": "50% 50%"}),
+#left-top region
+left_top_region = html.Div([left_column, right_column],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["background"],
+                          "height" : "100%",
+                          "grid-template-columns": "42% 58%",
+                          #"padding": "0% 1% 1% 1%",
+                          #"box-sizing": "border-box",
+                          #"margin-bottom": "50px",
+                          #"margin-top": "2%"
+                        }
+)
 
-            slider_div
+#left-bottom region
+left_bottom_region = html.Div(
+                        [slider, timeline],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["block"],
+                          "height" : "100%",#"96.5%",
+                          #"padding": "0% 0% 0% 0%",
+                          #"box-sizing": "border-box",
+                          "margin-top": "1vh",
+                          #"position" : "relative",
+                          "grid-template-rows": "2% 98%",
+                           }
+)
 
-        ], style={"display": "grid", "background-color":"#ffffff", "height":"98vh"}),
 
-        #CONTINENT GEOPLOT
-        dcc.Graph(id='graph-with-slider'),
+# Left Global Region
+left_region = html.Div([left_top_region, left_bottom_region],
+                        style={
+                          "display": "grid",
+                          "background-color": palette["background"],
+                          "height" : "100%",
+                          #"position" : "relative",
+                          #"padding": "0% 0% 0% 0%", #t r b l
+                          #"box-sizing": "border-box",
+                          "grid-template-rows": "80% 18.7%",
+                          #"margin-bottom": "50px",
+                          #"margin-top": "2%"
+                           }
+)
 
-    ],style={"display": "grid", "background-color":"#ffffff", "grid-template-columns": "66% 33.66%", "height":"98vh"})
+# Right Global Region
+right_region = html.Div(dcc.Graph(id='continente',  style={"width": "100%"}),
+                      style={
+                         "display": "grid",
+                          "background-color": palette["block"],
+                          "height": "100%",
+                          "margin-left": "1.5%",
+                          "padding": "0% 1% 1% 1%", # t r b l
+                          "box-sizing": "border-box",
+                           #"position" : "relative"
+                           }
+)
 
-##### Callbacks
+# container layout and elements
+app.layout = html.Div([
+                       left_region,
+                       right_region
+                      ],
+                      style={"display": "grid",
+                             "background-color": palette["background"],
+                             "grid-template-columns": "62% 38%",
+                             "height" : "97vh",
+                             "padding": "0.5% 0.5% 0.5% 0.5%",
+                             "box-sizing": "border-box",
+                             #"position" : "relative"
+                      }
+)
 
+##### CALLBACKS
 #total-cases-counter
 @app.callback(
     Output('total-cases-counter', 'children'),
@@ -387,7 +697,6 @@ app.layout = html.Div([
 )
 def create_total_cases_counter_callback(slider_date):
     return getTotalCases(slider_date)
-
 
 #Date-picker
 @app.callback(
@@ -400,14 +709,14 @@ def create_slider_timeline_callback(slider_date):
 #Date Slider
 @app.callback(
     Output('date-picker-single', 'date'),
-    Input('year_slider', 'value'))
+    Input('date_slider', 'value'))
 def slider_callback(selected_date):
     selected_date_str = str(unixToDatetime(selected_date).date())
     return datetime.date.fromisoformat(selected_date_str)
 
 #Choropleth (continent)
 @app.callback(
-    Output('graph-with-slider', 'figure'),
+    Output('continente', 'figure'),
     Input('date-picker-single', 'date'),
     Input('absolute-radio', 'value'),
     Input('cumulative-radio', 'value')
@@ -415,10 +724,9 @@ def slider_callback(selected_date):
 def create_choropleth_callback(selected_date, absolute, cumulative):
     return create_choropleth(selected_date, absolute, cumulative, Region.CONTINENT)
 
-
 #Choropleth (madeira)
 @app.callback(
-    Output('graph-with-slider_madeira', 'figure'),
+    Output('madeira', 'figure'),
     Input('date-picker-single', 'date'),
     Input('absolute-radio', 'value'),
     Input('cumulative-radio', 'value')
@@ -429,15 +737,13 @@ def create_choropleth_madeira_callback(selected_date, absolute, cumulative):
 
 #Choropleth (azores)
 @app.callback(
-    Output('graph-with-slider_azores', 'figure'),
+    Output('azores', 'figure'),
     Input('date-picker-single', 'date'),
     Input('absolute-radio', 'value'),
     Input('cumulative-radio', 'value')
 )
 def create_choropleth_azores_callback(selected_date, absolute, cumulative):
     return create_choropleth(selected_date, absolute, cumulative, Region.AZORES)
-
-
 
 ##### MAIN
 if __name__ == '__main__':
