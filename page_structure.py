@@ -220,7 +220,7 @@ left_region = html.Div([left_top_region, left_bottom_region],
                           #"position" : "relative",
                           #"padding": "0% 0% 0% 0%", #t r b l
                           #"box-sizing": "border-box",
-                          "grid-template-rows": "77% 22%",
+                          #"grid-template-rows": "77% 22%",
                           #"margin-bottom": "50px",
                           #"margin-top": "2%"
                            }
