@@ -553,7 +553,8 @@ left_region = html.Div([left_top_region, left_bottom_region],
                           #"box-sizing": "border-box",
                           "grid-template-rows": "80% 18.7%",
                           #"margin-bottom": "50px",
-                          #"margin-top": "2%"
+                          #"margin-top": "2%",
+                          "z-index":"1"
                            }
 )
 
