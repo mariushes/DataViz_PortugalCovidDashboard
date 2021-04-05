@@ -1,0 +1,279 @@
+,concelho,CCA_2
+0,Évora,0705
+1,Alandroal,0701
+2,Arraiolos,0702
+3,Borba,0703
+4,Estremoz,0704
+5,Montemor-o-novo,0706
+6,Mora,0707
+7,Mourão,0708
+8,Portel,0709
+9,Redondo,0710
+10,Reguengos de monsaraz,0711
+11,Vendas novas,0712
+12,Viana do alentejo,0713
+13,Vila viçosa,0714
+14,Águeda,0101
+15,Ílhavo,0110
+16,Albergaria-a-velha,0102
+17,Anadia,0103
+18,Arouca,0104
+19,Aveiro,0105
+20,Castelo de paiva,0106
+21,Espinho,0107
+22,Estarreja,0108
+23,Mealhada,0111
+24,Murtosa,0112
+25,Oliveira de azeméis,0113
+26,Oliveira do bairro,0114
+27,Ovar,0115
+28,São joão da madeira,0116
+29,Santa maria da feira,0109
+30,Sever do vouga,0117
+31,Vagos,0118
+32,Vale de cambra,0119
+52,Aljustrel,0201
+53,Almodôvar,0202
+54,Alvito,0203
+55,Barrancos,0204
+56,Beja,0205
+57,Castro verde,0206
+58,Cuba,0207
+59,Ferreira do alentejo,0208
+60,Mértola,0209
+61,Moura,0210
+62,Odemira,0211
+63,Ourique,0212
+64,Serpa,0213
+65,Vidigueira,0214
+66,Amares,0301
+67,Barcelos,0302
+68,Braga,0303
+69,Braga,0308
+70,Cabeceiras de basto,0304
+71,Celorico de basto,0305
+72,Esposende,0306
+73,Fafe,0307
+74,Póvoa de lanhoso,0309
+75,Terras de bouro,0310
+76,Vieira do minho,0311
+77,Vila nova de famalicão,0312
+78,Vila verde,0313
+79,Vizela,0314
+80,Alfândega da fé,0401
+81,Bragança,0402
+82,Carrazeda de ansiães,0403
+83,Freixo de espada à cinta,0404
+84,Macedo de cavaleiros,0405
+85,Miranda do douro,0406
+86,Mirandela,0407
+87,Mogadouro,0408
+88,Torre de moncorvo,0409
+89,Vila flor,0410
+90,Vimioso,0411
+91,Vinhais,0412
+92,Belmonte,0501
+93,Castelo branco,0502
+94,Covilhã,0503
+95,Fundão,0504
+96,Idanha-a-nova,0505
+97,Oleiros,0506
+98,Penamacor,0507
+99,Proença-a-nova,0508
+100,Sertã,0509
+101,Vila de rei,0510
+102,Vila velha de ródão,0511
+103,Arganil,0601
+104,Cantanhede,0602
+105,Coimbra,0603
+106,Condeixa-a-nova,0604
+107,Figueira da foz,0605
+108,Góis,0606
+109,Lousã,0607
+110,Mira,0608
+111,Miranda do corvo,0609
+112,Montemor-o-velho,0610
+113,Oliveira do hospital,0611
+114,Pampilhosa da serra,0612
+115,Penacova,0613
+116,Penela,0614
+117,Soure,0615
+118,Tábua,0616
+119,Vila nova de poiares,0617
+120,Albufeira,0801
+121,Alcoutim,0802
+122,Alcoutim,0814
+123,Aljezur,0803
+124,Castro marim,0804
+125,Faro,0805
+126,Lagoa,0806
+127,Lagos,0807
+128,Loulé,0808
+129,Monchique,0809
+130,Olhão,0810
+131,Portimão,0811
+132,São brás de alportel,0812
+133,Silves,0813
+134,Vila do bispo,0815
+135,Vila real de santo antónio,0816
+136,Aguiar da beira,0901
+137,Almeida,0902
+138,Celorico da beira,0903
+139,Figueira de castelo rodrigo,0904
+140,Fornos de algodres,0905
+141,Gouveia,0906
+142,Guarda,0907
+143,Mêda,0909
+144,Manteigas,0908
+145,Pinhel,0910
+146,Sabugal,0911
+147,Seia,0912
+148,Trancoso,0913
+149,Vila nova de foz côa,0914
+150,Óbidos,1012
+151,Alcobaça,1001
+152,Alvaiázere,1002
+153,Ansião,1003
+154,Batalha,1004
+155,Bombarral,1005
+156,Caldas da rainha,1006
+157,Castanheira de pêra,1007
+158,Figueiró dos vinhos,1008
+159,Leiria,1009
+160,Marinha grande,1010
+161,Nazaré,1011
+162,Pedrógão grande,1013
+163,Peniche,1014
+164,Pombal,1015
+165,Porto de mós,1016
+166,Alenquer,1101
+167,Amadora,1115
+168,Arruda dos vinhos,1102
+169,Azambuja,1103
+170,Cadaval,1104
+171,Cascais,1105
+172,Lisboa,1106
+173,Loures,1107
+174,Lourinhã,1108
+175,Mafra,1109
+176,Odivelas,1116
+177,Oeiras,1110
+178,Sintra,1111
+179,Sobral de monte agraço,1112
+180,Torres vedras,1113
+181,Vila franca de xira,1114
+193,Alter do chão,1201
+194,Arronches,1202
+195,Avis,1203
+196,Campo maior,1204
+197,Castelo de vide,1205
+198,Crato,1206
+199,Elvas,1207
+200,Fronteira,1208
+201,Gavião,1209
+202,Marvão,1210
+203,Monforte,1211
+204,Nisa,1212
+205,Ponte de sôr,1213
+206,Portalegre,1214
+207,Sousel,1215
+208,Amarante,1301
+209,Baião,1302
+210,Felgueiras,1303
+211,Gondomar,1304
+212,Lousada,1305
+213,Maia,1306
+214,Marco de canaveses,1307
+215,Matosinhos,1308
+216,Póvoa de varzim,1313
+217,Paços de ferreira,1309
+218,Paredes,1310
+219,Penafiel,1311
+220,Porto,1312
+221,Santo tirso,1314
+222,Trofa,1318
+223,Valongo,1315
+224,Vila do conde,1316
+225,Vila nova de gaia,1317
+226,Abrantes,1401
+227,Alcanena,1402
+228,Almeirim,1403
+229,Alpiarça,1404
+230,Benavente,1405
+231,Cartaxo,1406
+232,Chamusca,1407
+233,Constância,1408
+234,Coruche,1409
+235,Entroncamento,1410
+236,Ferreira do zêzere,1411
+237,Golegã,1412
+238,Mação,1413
+239,Ourém,1421
+240,Rio maior,1414
+241,Salvaterra de magos,1415
+242,Santarém,1416
+243,Sardoal,1417
+244,Tomar,1418
+245,Torres novas,1419
+246,Vila nova da barquinha,1420
+247,Alcácer do sal,1501
+248,Alcochete,1502
+249,Almada,1503
+250,Barreiro,1504
+251,Grândola,1505
+252,Moita,1506
+253,Montijo,1507
+254,Palmela,1508
+255,Santiago do cacém,1509
+256,Seixal,1510
+257,Sesimbra,1511
+258,Setúbal,1512
+259,Sines,1513
+260,Arcos de valdevez,1601
+261,Caminha,1602
+262,Melgaço,1603
+263,Monção,1604
+264,Paredes de coura,1605
+265,Ponte da barca,1606
+266,Ponte de lima,1607
+267,Valença,1608
+268,Viana do castelo,1609
+269,Vila nova de cerveira,1610
+270,Alijó,1701
+271,Boticas,1702
+272,Chaves,1703
+273,Mesão frio,1704
+274,Mondim de basto,1705
+275,Montalegre,1706
+276,Murça,1707
+277,Peso da régua,1708
+278,Ribeira de pena,1709
+279,Sabrosa,1710
+280,Santa marta de penaguião,1711
+281,Valpaços,1712
+282,Vila pouca de aguiar,1713
+283,Vila real,1714
+284,Armamar,1801
+285,Carregal do sal,1802
+286,Castro daire,1803
+287,Cinfães,1804
+288,Lamego,1805
+289,Mangualde,1806
+290,Moimenta da beira,1807
+291,Mortágua,1808
+292,Nelas,1809
+293,Oliveira de frades,1810
+294,Penalva do castelo,1811
+295,Penedono,1812
+296,Resende,1813
+297,Sátão,1817
+298,São joão da pesqueira,1815
+299,São pedro do sul,1816
+300,Santa comba dão,1814
+301,Sernancelhe,1818
+302,Tabuaço,1819
+303,Tarouca,1820
+304,Tondela,1821
+305,Vila nova de paiva,1822
+306,Viseu,1823
+307,Vouzela,1824
