@@ -99,7 +99,7 @@ slider_div = html.Div([html.H4('Slider div', style={"color":'white'})],
 ##### COMPONENTS
 # Title
 title_div = html.Div([
-                      html.H4('Progression of coronavirus in Portugal',
+                      html.H4('Regional Progression of SARS-CoV-2 in Portugal',
                               style={"color":'red',
                                      "font-size": 20,
                                      "font-weight" : 'bold'
