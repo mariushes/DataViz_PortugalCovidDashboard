@@ -18,8 +18,8 @@ from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
 from enum import Enum
 
-#from backports.datetime_fromisoformat import MonkeyPatch
-#MonkeyPatch.patch_fromisoformat()
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
 ####
 
 palette = {
