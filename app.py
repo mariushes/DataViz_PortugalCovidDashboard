@@ -18,15 +18,15 @@ from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
 from enum import Enum
 
-from backports.datetime_fromisoformat import MonkeyPatch
-MonkeyPatch.patch_fromisoformat()
+#from backports.datetime_fromisoformat import MonkeyPatch
+#MonkeyPatch.patch_fromisoformat()
 ####
 
 palette = {
     'background' : 'rgba(20, 20, 50, 1)',
     'block' : 'rgba(50, 50, 50, 1)',
     'borders': 'rgba(0, 0, 0, 1)',
-    'text': 'rgba(114, 114, 114, 1)',
+    'text': 'rgba(255, 255, 255, 1)',
     'legendtext': 'black',
     'bartext': 'black',
 }
@@ -394,7 +394,7 @@ def createFigure(region, region_data, max_value):
         zmax=max_value,
         hovertext=region_data[['concelho', 'value']],
         hoverinfo="text",
-        showscale = False,
+        #showscale = False,
         colorbar=dict(
             title={
                 'text': '',
@@ -405,7 +405,7 @@ def createFigure(region, region_data, max_value):
                 'side': 'right'
             },
             tickfont={
-                'color': palette['bartext']
+                'color': palette['text']
             }
         ),
         marker=dict(line=dict(width=1))
