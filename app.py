@@ -101,7 +101,7 @@ slider_div = html.Div([html.H4('Slider div', style={"color":'white'})],
 title_div = html.Div([
                       html.H4('Regional Progression of SARS-CoV-2 in Portugal',
                               style={"color":'red',
-                                     "font-size": 20,
+                                     "font-size": 26,
                                      "font-weight" : 'bold'
                               }),
                       html.P('Filipe Coelho, m20200580', style={"color":'white'}),
