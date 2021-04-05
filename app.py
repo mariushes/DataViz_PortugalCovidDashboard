@@ -224,8 +224,10 @@ timeline = html.Div(dcc.Graph(id='slider-timeline',
 def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
     portugal_new_infections_7average_data_color["color"] = ["green"]
-    color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
-    color_interval(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
+    color_interval(portugal_new_infections_7average_data_color, "2020-03-24", "2020-05-04", "red")
+    color_interval(portugal_new_infections_7average_data_color, "2020-11-01", "2020-11-11", "red")
+    color_interval(portugal_new_infections_7average_data_color, "2020-11-11", "2020-12-27", "yellow")
+    color_interval(portugal_new_infections_7average_data_color, "2020-12-27", "2021-03-17", "red")
 
     color_text = {
         "yellow":"Regional Lockdown",
