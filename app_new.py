@@ -379,7 +379,7 @@ def createFigure(region, region_data, max_value):
         colorscale="teal",
         zmin=0,
         zmax=max_value,
-        hovertext=region_data.concelho,
+        hovertext=region_data[['concelho', 'value']],
         hoverinfo="text",
         showscale = False,
         colorbar=dict(
