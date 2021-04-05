@@ -18,6 +18,8 @@ from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
 from enum import Enum
 
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
 ####
 
 palette = {
@@ -51,6 +53,8 @@ def getMarks(start, end, Nth=1):
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+server = app.server
+
 ##### DATA LOAD
 
 #df_new_concelhos
@@ -76,6 +80,10 @@ portugal_new_infections_7average_data= pd.read_csv("./Data/time_series_covid19_c
 portugal_new_infections_7average_data = portugal_new_infections_7average_data.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
 portugal_new_infections_7average_data = portugal_new_infections_7average_data[date_range(dates[0],dates[-1])]
 
+#portugal_cumulative_cases
+portugal_cumulative_cases = pd.read_csv("./Data/time_series_covid19_confirmed_portugal.csv")
+portugal_cumulative_cases = portugal_cumulative_cases.drop(labels=["Province/State","Country/Region","Lat","Long"], axis=1)
+portugal_cumulative_cases = portugal_cumulative_cases[date_range(dates[0],dates[-1])]
 
 
 ### Components
@@ -155,13 +163,15 @@ counter_div = html.Div([html.P('Total Cases: ', style={"color":'white'}),
 )
 def getTotalCases(selected_date):
     # if the selected date is not in the available dates choose the next higher date.
+    """
     if selected_date not in dates:
         for x in dates:
             if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
                 selected_date = x
                 break
+    """
+    return portugal_cumulative_cases.loc[0,selected_date]
 
-    return '%d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
 
 # Date Picker
 date_picker = dcc.DatePickerSingle(
@@ -215,8 +225,11 @@ timeline = html.Div(dcc.Graph(id='slider-timeline',
 def create_slider_timeline(slider_date):
     portugal_new_infections_7average_data_color = portugal_new_infections_7average_data.copy()
     portugal_new_infections_7average_data_color["color"] = ["green"]
-    color_interval(portugal_new_infections_7average_data_color, "2020-10-27", "2020-11-27", "yellow")
-    color_interval(portugal_new_infections_7average_data_color, "2021-01-15", "2021-02-28", "red")
+    color_interval(portugal_new_infections_7average_data_color, "2020-03-24", "2020-05-04", "red")
+    color_interval(portugal_new_infections_7average_data_color, "2020-11-01", "2020-11-11", "red")
+    color_interval(portugal_new_infections_7average_data_color, "2020-11-11", "2020-12-23", "yellow")
+    color_interval(portugal_new_infections_7average_data_color, "2020-12-23", "2020-12-30", "green")
+    color_interval(portugal_new_infections_7average_data_color, "2020-12-30", "2021-03-17", "red")
 
     color_text = {
         "yellow":"Regional Lockdown",

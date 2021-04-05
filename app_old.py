@@ -18,6 +18,11 @@ import statistics
 from dash.dependencies import Input, Output
 from helper_functions import color_interval, date_range
 from enum import Enum
+import datetime
+#from datetime import date, datetime, time
+
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
 
 ##### Auxiliary functions
 def unixToDatetime(unix):
@@ -25,7 +30,7 @@ def unixToDatetime(unix):
     return pd.to_datetime(unix,unit='s')
 
 def getMarks(start, end, Nth=1):
-    ''' Returns the marks for labeling. 
+    ''' Returns the marks for labeling.
         Every Nth value will be used.
     '''
     daterange = pd.date_range(start,end)
@@ -94,7 +99,7 @@ def getTotalCases(selected_date):
             if datetime.date.fromisoformat(selected_date) <= datetime.date.fromisoformat(x):
                 selected_date = x
                 break
-            
+
     return 'Total number of cases: %d' % np.sum(df_cumulative_concelhos.loc[[selected_date]], axis=1)
 
 #Choropleth
@@ -102,6 +107,7 @@ class Region(Enum):
     CONTINENT = 1
     MADEIRA = 2
     AZORES = 3
+
 def create_choropleth(selected_date, absolute, cumulative, output_region):
     if absolute == "Absolute" and cumulative == 'New Infections':
         df = df_new_concelhos
@@ -172,7 +178,7 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
                 print("Exception: ", e)
 
         return createFigure(continente, continente_data, max)
-    
+
     elif output_region == Region.MADEIRA:
         # update all the madeira data with the values from df_concelhos
         for i in madeira_data.index.tolist():
@@ -221,7 +227,7 @@ def createFigure(region, region_data, max_value):
 
     ## Choropleth map ######
     fig.add_choropleth(
-        geojson=region, 
+        geojson=region,
         locations=region_data.id,
         z=region_data.value,
         colorscale="teal",
@@ -232,13 +238,13 @@ def createFigure(region, region_data, max_value):
         colorbar=dict(
             title={
                 'text': '',
-                'font': {  
+                'font': {
                     'family': 'Arial',
                     'color': palette['text']
                 },
                 'side': 'right'
             },
-            tickfont={  
+            tickfont={
                 'color': palette['bartext']
             }
         ),
@@ -246,7 +252,7 @@ def createFigure(region, region_data, max_value):
     )
     fig.update_geos(fitbounds="locations", bgcolor='rgba(0,0,0,0)', visible=False)
     fig.update_layout(
-        margin={"r":0,"t":0,"l":0,"b":0}, 
+        margin={"r":0,"t":0,"l":0,"b":0},
         geo=dict(bgcolor= 'rgba(0,0,0,0)'),
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)')
@@ -322,7 +328,7 @@ date_picker = dcc.DatePickerSingle(
         max_date_allowed=datetime.date.fromisoformat(dates[-1]),
         initial_visible_month=datetime.date.fromisoformat(dates[-1]),
         date=datetime.date.fromisoformat(dates[-1])
-    ) 
+    )
 
 
 
@@ -331,6 +337,8 @@ date_picker = dcc.DatePickerSingle(
 ##### Dash
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+server = app.server
 
 #container layout and elements
 app.layout = html.Div([
@@ -348,16 +356,16 @@ app.layout = html.Div([
                     html.Div([
                         html.H3('Progression of coronavirus in Portugal'),
                         html.P([
-                            'Filipe Coelho, m20200580', 
+                            'Filipe Coelho, m20200580',
                             html.Br(), 'Ivan Kisialiou, m20200998',
                             html.Br(), 'José Quintas, m20200673',
                             html.Br(), 'Marius Hessenthaler, e20201824'
                         ])
                     ], style={"display": "grid"}),
-                    
-                    date_picker,  
+
+                    date_picker,
                     radios_div,
-                    
+
                     html.H4('0', id='total-cases-counter')
 
                 ], style={"display": "grid"}),
