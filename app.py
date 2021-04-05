@@ -289,14 +289,14 @@ def create_choropleth(selected_date, absolute, cumulative, output_region):
         df = df_new_concelhos
         quantiles = []
         for column in df.columns:
-            quantiles.append(df[column].quantile(0.95))
+            quantiles.append(df[column].quantile(0.99))
         max = np.max(quantiles)
     elif absolute == "Per 100k Inhabitants" and cumulative == 'New Cases':
         df = df_new_per100k_concelhos
         # compute max value for map choropleth
         quantiles = []
         for column in df.columns:
-            quantiles.append(df[column].quantile(0.95))
+            quantiles.append(df[column].quantile(0.99))
         max = statistics.mean(quantiles)
     elif absolute == "Per 100k Inhabitants" and cumulative == 'Cumulative':
         df = df_cumulative_per100k_concelhos
