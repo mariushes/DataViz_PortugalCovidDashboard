@@ -53,6 +53,8 @@ def getMarks(start, end, Nth=1):
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+server = app.server
+
 ##### DATA LOAD
 
 #df_new_concelhos
